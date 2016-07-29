@@ -11,6 +11,7 @@
 <h3 id="1-1-术语说明"><a href="#1-1-术语说明" class="headerlink" title="1.1 术语说明"></a>1.1 术语说明</h3><p>在本文档中，除非另有说明：</p>
 <p>术语<code>class</code>可表示一个普通类，枚举类，接口或是annotation类型(@interface)<br>术语<code>comment</code>只用来指代实现的注释(implementation comments)，我们不使用“documentation comments”一词，而是用Javadoc。<br>其他的术语说明会偶尔在后面的文档出现。</p>
 <h3 id="1-2-指南说明"><a href="#1-2-指南说明" class="headerlink" title="1.2 指南说明"></a>1.2 指南说明</h3><p>本文档中的示例代码并不作为规范。也就是说，虽然示例代码是遵循Ximalaya编程风格，但并不意味着这是展现这些代码的唯一方式。 示例中的格式选择不应该被强制定为规则。</p>
+<a id="more"></a>
 <h2 id="源文件基础"><a href="#源文件基础" class="headerlink" title="源文件基础"></a>源文件基础</h2><h3 id="2-1-文件名"><a href="#2-1-文件名" class="headerlink" title="2.1 文件名"></a>2.1 文件名</h3><p>源文件以其最顶层的类名来命名，大小写敏感，文件扩展名为<code>.java</code>。</p>
 <h3 id="2-2-编码"><a href="#2-2-编码" class="headerlink" title="2.2 编码"></a>2.2 编码</h3><p>源文件编码格式为<code>UTF-8</code>。</p>
 <h3 id="2-3-特殊字符"><a href="#2-3-特殊字符" class="headerlink" title="2.3 特殊字符"></a>2.3 特殊字符</h3><p>不要使用特殊字符。</p>
