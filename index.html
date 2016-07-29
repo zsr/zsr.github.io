@@ -320,14 +320,21 @@
 
       
         
-          
-          OpenJDK 源码阅读之 ArrayList
-概要
-类继承关系 
-
-1234java.lang.Object    java.util.AbstractCollection&lt;E&gt;        java.util.AbstractList&lt;E&gt;            jav
-          ...
-
+          <h1 id="OpenJDK-源码阅读之-ArrayList"><a href="#OpenJDK-源码阅读之-ArrayList" class="headerlink" title="OpenJDK 源码阅读之 ArrayList"></a>OpenJDK 源码阅读之 ArrayList</h1><hr>
+<h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><ul>
+<li>类继承关系 </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">java.lang.Object</div><div class="line">    java.util.AbstractCollection&lt;E&gt;</div><div class="line">        java.util.AbstractList&lt;E&gt;</div><div class="line">            java.util.ArrayList&lt;E&gt;</div></pre></td></tr></table></figure>
+<ul>
+<li>定义</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">public class ArrayList&lt;E&gt; extends AbstractList&lt;E&gt;</div><div class="line">        implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable</div><div class="line">&#123;</div><div class="line">&#125;</div><div class="line">``</div><div class="line"></div><div class="line">## 实现</div><div class="line"></div><div class="line">* transient</div><div class="line"></div><div class="line">```Java</div><div class="line"> private transient Object[] elementData;</div></pre></td></tr></table></figure>
+<p>声明为 <code>transient</code>后，这个字段不会被序列化。</p>
+<ul>
+<li>toArray<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</div><div class="line"> * Constructs a list containing the elements of the specified</div><div class="line"> * collection, in the order they are returned by the collection's</div><div class="line"> * iterator.</div><div class="line"> *</div><div class="line"> * <span class="doctag">@param</span> c the collection whose elements are to be placed into this list</div><div class="line"> * <span class="doctag">@throws</span> NullPointerException if the specified collection is null</div><div class="line"> */</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>&#123;</div><div class="line">    elementData = c.toArray();</div><div class="line">    size = elementData.length;</div><div class="line">    <span class="comment">// c.toArray might (incorrectly) not return Object[] (see 6260652)</span></div><div class="line">    <span class="keyword">if</span> (elementData.getClass() != Object[].class)</div><div class="line">        elementData = Arrays.copyOf(elementData, size, Object[].class);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>注意对 <code>elementData</code> 的检查，<a href="http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652">Bug 6260652</a>中对此有详细描述。主要原因是 <code>c.toArray()</code> 不一定会返回　<code>Object[]</code> 类型的值。</p>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/07/29/ArrayList/#more" rel="contents">
               阅读全文 &raquo;
@@ -538,14 +545,17 @@
       
         
           
-          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in 
-          ...
+            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
 
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/07/26/hello-world/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
+          
         
       
     </div>

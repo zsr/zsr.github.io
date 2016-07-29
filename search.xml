@@ -21,6 +21,7 @@
 </li>
 </ul>
 <p>注意对 <code>elementData</code> 的检查，<a href="http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652" target="_blank" rel="external">Bug 6260652</a>中对此有详细描述。主要原因是 <code>c.toArray()</code> 不一定会返回　<code>Object[]</code> 类型的值。</p>
+<a id="more"></a>
 <ul>
 <li>SuppressWarnings</li>
 </ul>
