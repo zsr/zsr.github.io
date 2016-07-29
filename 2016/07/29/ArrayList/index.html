@@ -92,7 +92,7 @@
 
 定义
 
-123456789101112publ">
+1234public class Ar">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ArrayList">
 <meta property="og:url" content="http://zsr.github.io/2016/07/29/ArrayList/index.html">
@@ -105,8 +105,8 @@
 
 定义
 
-123456789101112publ">
-<meta property="og:updated_time" content="2016-07-29T15:53:34.000Z">
+1234public class Ar">
+<meta property="og:updated_time" content="2016-07-29T16:04:09.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ArrayList">
 <meta name="twitter:description" content="OpenJDK 源码阅读之 ArrayList
@@ -117,7 +117,7 @@
 
 定义
 
-123456789101112publ">
+1234public class Ar">
 
 
 
@@ -347,7 +347,11 @@
 <ul>
 <li>定义</li>
 </ul>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">public class ArrayList&lt;E&gt; extends AbstractList&lt;E&gt;</div><div class="line">        implements List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable</div><div class="line">&#123;</div><div class="line">&#125;</div><div class="line">``</div><div class="line"></div><div class="line">## 实现</div><div class="line"></div><div class="line">* transient</div><div class="line"></div><div class="line">```Java</div><div class="line"> private transient Object[] elementData;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ArrayList</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractList</span>&lt;<span class="title">E</span>&gt;</span></div><div class="line">        <span class="keyword">implements</span> <span class="title">List</span>&lt;<span class="title">E</span>&gt;, <span class="title">RandomAccess</span>, <span class="title">Cloneable</span>, <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span></div><div class="line">&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><ul>
+<li>transient</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">transient</span> Object[] elementData;</div></pre></td></tr></table></figure>
 <p>声明为 <code>transient</code>后，这个字段不会被序列化。</p>
 <ul>
 <li>toArray<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * Constructs a list containing the elements of the specified</div><div class="line"> * collection, in the order they are returned by the collection's</div><div class="line"> * iterator.</div><div class="line"> *</div><div class="line"> * <span class="doctag">@param</span> c the collection whose elements are to be placed into this list</div><div class="line"> * <span class="doctag">@throws</span> NullPointerException if the specified collection is null</div><div class="line"> */</div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>&#123;</div><div class="line">    elementData = c.toArray();</div><div class="line">    size = elementData.length;</div><div class="line">    <span class="comment">// c.toArray might (incorrectly) not return Object[] (see 6260652)</span></div><div class="line">    <span class="keyword">if</span> (elementData.getClass() != Object[].class)</div><div class="line">        elementData = Arrays.copyOf(elementData, size, Object[].class);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -621,7 +625,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenJDK-源码阅读之-ArrayList"><span class="nav-number">1.</span> <span class="nav-text">OpenJDK 源码阅读之 ArrayList</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概要"><span class="nav-number">1.1.</span> <span class="nav-text">概要</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OpenJDK-源码阅读之-ArrayList"><span class="nav-number">1.</span> <span class="nav-text">OpenJDK 源码阅读之 ArrayList</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概要"><span class="nav-number">1.1.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">1.2.</span> <span class="nav-text">实现</span></a></li></ol></li></ol></div>
             
           </div>
         </section>
