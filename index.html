@@ -270,6 +270,121 @@
             
               
                 
+                <a class="post-title-link" href="/2016/08/01/HashMap/" itemprop="url">
+                  HashMap
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-01T14:59:17+08:00" content="2016-08-01">
+              2016-08-01
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/08/01/HashMap/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/01/HashMap/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="OpenJDK-源代码阅读之-HashMap"><a href="#OpenJDK-源代码阅读之-HashMap" class="headerlink" title="OpenJDK 源代码阅读之 HashMap"></a>OpenJDK 源代码阅读之 HashMap</h1><hr>
+<h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><ul>
+<li>类继承关系</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">java.lang.Object</div><div class="line">    java.util.AbstractMap&lt;K,V&gt;</div><div class="line">        java.util.TreeMap&lt;K,V&gt;</div></pre></td></tr></table></figure>
+<ul>
+<li>定义 </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public class TreeMap&lt;K,V&gt;</div><div class="line">extends AbstractMap&lt;K,V&gt;</div><div class="line">implements NavigableMap&lt;K,V&gt;, Cloneable, Serializable</div></pre></td></tr></table></figure>
+<ul>
+<li>要点</li>
+</ul>
+<p>1) 与 Hashtable 区别在于：非同步，允许 <code>null</code><br>2) 不保证次序，甚至不保证次序随时间不变<br>3) 基本操作 put, get 常量时间<br>4) 遍历操作 与 capacity+size 成正比<br>5) HashMap 性能与 <code>capacity</code> 和 <code>load factor</code> 相关，<code>load factor</code> 是当前元素个数与 <code>capacity</code> 的比值，通常设定为 <code>0.75</code>，如果此值过大，空间利用率高，但是冲突的可能性增加，因而可能导致查找时间增加，如果过小，反之。当元素个数大于 <code>capacity * load_factor</code> 时，<code>HashMap</code> 会重新安排 Hash 表。因此高效地使用 <code>HashMap</code> 需要预估元素个数，设置最佳的 <code>capacity</code> 和 <code>load factor</code> ，使得重新安排 Hash 表的次数下降。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/08/01/HashMap/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/08/01/git使用小记/" itemprop="url">
                   git使用小记
                 </a>
@@ -735,7 +850,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">4</span>
+              <span class="site-state-item-count">5</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -745,7 +860,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
