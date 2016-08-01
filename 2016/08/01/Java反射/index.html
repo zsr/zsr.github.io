@@ -95,7 +95,7 @@
 ######Java语言允许通过程序化的方式间接对Class进行操作，Class文件由类装载器装载后，在JVM中将形成一份描述Class结构的元信息对象，通过该元信息对象可以获知Class的结构信息：如构造函数、属性和方法等。Java允许用户借由这个Class相关的元信息对象间接调用Class对象的功能，这就为使用程序化方式操作Class对象开辟了途径。 
 简单实例我们将从一个简单例">
 <meta property="og:image" content="http://zsr.github.io/images/图3-4 类加载.jpg">
-<meta property="og:updated_time" content="2016-08-01T08:16:55.000Z">
+<meta property="og:updated_time" content="2016-08-01T08:21:32.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java反射">
 <meta name="twitter:description" content="Java反射
@@ -329,15 +329,13 @@
 <p>代码清单3-9  Car<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.baobaotao.reflect;  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;  </div><div class="line">    <span class="keyword">private</span> String brand;  </div><div class="line">    <span class="keyword">private</span> String color;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maxSpeed; </div><div class="line">    <span class="comment">//①默认构造函数  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">()</span></span>&#123;&#125;  </div><div class="line">     <span class="comment">//②带参构造函数  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">(String brand,String color,<span class="keyword">int</span> maxSpeed)</span></span>&#123;   </div><div class="line">        <span class="keyword">this</span>.brand = brand;  </div><div class="line">        <span class="keyword">this</span>.color = color;  </div><div class="line">        <span class="keyword">this</span>.maxSpeed = maxSpeed;  </div><div class="line">    &#125;  </div><div class="line">     <span class="comment">//③未带参的方法  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">introduce</span><span class="params">()</span> </span>&#123;   </div><div class="line">       System.out.println(<span class="string">"brand:"</span>+brand+<span class="string">";color:"</span>+color+<span class="string">";maxSpeed:"</span> +maxSpeed);  </div><div class="line">    &#125;  </div><div class="line">     <span class="comment">//省略参数的getter/Setter方法  </span></div><div class="line">     …  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>一般情况下，我们会使用如下的代码创建Car的实例：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Car car = <span class="keyword">new</span> Car();  </div><div class="line">car.setBrand(<span class="string">"红旗CA72"</span>);</div></pre></td></tr></table></figure></p>
 <p>或者：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Car car = new Car(&quot;红旗CA72&quot;,&quot;黑色&quot;);</div></pre></td></tr></table></figure></p>
-<p>以上两种方法都采用传统方式的直接调用目标类的方法，下面我们通过Java反射机制以一种更加通用的方式间接地操作目标类： </p>
+<p>以上两种方法都采用传统方式的直接调用目标类的方法，下面我们通过Java反射机制以一种更加通用的方式间接地操作目标类：<br><a id="more"></a></p>
 <p>代码清单3-10  ReflectTest<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.baobaotao. reflect;  </div><div class="line"><span class="keyword">import</span> java.lang.reflect.Constructor;  </div><div class="line"><span class="keyword">import</span> java.lang.reflect.Field;  </div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method;  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ReflectTest</span> </span>&#123;  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Car  <span class="title">initByDefaultConst</span><span class="params">()</span> <span class="keyword">throws</span> Throwable  </span></div><div class="line">    &#123;  </div><div class="line">        <span class="comment">//①通过类装载器获取Car类对象  </span></div><div class="line">        ClassLoader loader = Thread.currentThread().getContextClassLoader();   </div><div class="line">        Class clazz = loader.loadClass(<span class="string">"com.baobaotao.reflect.Car"</span>); </div><div class="line">        <span class="comment">//②获取类的默认构造器对象并通过它实例化Car  </span></div><div class="line">        Constructor cons = clazz.getDeclaredConstructor((Class[])<span class="keyword">null</span>);   </div><div class="line">        Car car = (Car)cons.newInstance();  </div><div class="line">        <span class="comment">//③通过反射方法设置属性  </span></div><div class="line">        Method setBrand = clazz.getMethod(<span class="string">"setBrand"</span>,String.class);          </div><div class="line">        setBrand.invoke(car,<span class="string">"红旗CA72"</span>);        </div><div class="line">        Method setColor = clazz.getMethod(<span class="string">"setColor"</span>,String.class);  </div><div class="line">        setColor.invoke(car,<span class="string">"黑色"</span>);        </div><div class="line">        Method setMaxSpeed = clazz.getMethod(<span class="string">"setMaxSpeed"</span>,<span class="keyword">int</span>.class);  </div><div class="line">        setMaxSpeed.invoke(car,<span class="number">200</span>);          </div><div class="line">        <span class="keyword">return</span> car;  </div><div class="line">    &#125;  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;  </div><div class="line">        Car car = initByDefaultConst();  </div><div class="line">        car.introduce();  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>运行以上程序，在控制台上将打印出以下信息：<br>引用<br>brand:红旗CA72;color:黑色;maxSpeed:200</p>
 <p>这说明我们完全可以通过编程方式调用Class的各项功能，这和直接通过构造函数和方法调用类功能的效果是一致的，只不过前者是间接调用，后者是直接调用罢了。 </p>
 <p>在ReflectTest中，使用了几个重要的反射类，分别是ClassLoader、Class、Constructor和Method，通过这些反射类就可以间接调用目标Class的各项功能了。在①处，我们获取当前线程的ClassLoader，然后通过指定的全限定类“com.baobaotao.beans.Car”装载Car类对应的反射实例。在②处，我们通过Car的反射类对象获取Car的构造函数对象cons，通过构造函数对象的newInstrance()方法实例化Car对象，其效果等同于new Car()。在③处，我们又通过Car的反射类对象的getMethod（String methodName,Class paramClass）获取属性的Setter方法对象，第一个参数是目标Class的方法名；第二个参数是方法入参的对象类型。获取方法反射对象后，即可通过invoke（Object obj,Object param）方法调用目标类的方法，该方法的第一个参数是操作的目标类对象实例；第二个参数是目标方法的入参。 </p>
 <p>在代码清单3 10中，粗体所示部分的信息即是通过反射方法操控目标类的元信息，如果我们将这些信息以一个配置文件的方式提供，就可以使用Java语言的反射功能编写一段通用的代码对类似于Car的类进行实例化及功能调用操作了。 </p>
-<p>###类装载器ClassLoader </p>
-<p>####类装载器工作机制 </p>
-<p>类装载器就是寻找类的节码文件并构造出类在JVM内部表示对象的组件。在Java中，类装载器把一个类装入JVM中，要经过以下步骤： </p>
+<h3 id="类装载器ClassLoader"><a href="#类装载器ClassLoader" class="headerlink" title="类装载器ClassLoader"></a>类装载器ClassLoader</h3><h4 id="类装载器工作机制"><a href="#类装载器工作机制" class="headerlink" title="类装载器工作机制"></a>类装载器工作机制</h4><p>类装载器就是寻找类的节码文件并构造出类在JVM内部表示对象的组件。在Java中，类装载器把一个类装入JVM中，要经过以下步骤： </p>
 <ul>
 <li>装载：查找和导入Class文件； </li>
 <li>链接：执行校验、准备和解析步骤，其中解析步骤是可以选择的： <ul>
@@ -354,8 +352,7 @@
 <p>运行以上代码，在控制台上将打出以下信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">current loader:sun.misc.Launcher$AppClassLoader@131f71a </div><div class="line">parent loader:sun.misc.Launcher$ExtClassLoader@15601ea </div><div class="line"> //①根装载器在Java中访问不到，所以返回null </div><div class="line">grandparent loader:null</div></pre></td></tr></table></figure></p>
 <p>通过以上的输出信息，我们知道当前的ClassLoader是AppClassLoader，父ClassLoader是ExtClassLoader，祖父ClassLoader是根类装载器，因为在Java中无法获得它的句柄，所以仅返回null。 </p>
 <p>JVM装载类时使用“全盘负责委托机制”，“全盘负责”是指当一个ClassLoader装载一个类的时，除非显式地使用另一个ClassLoader，该类所依赖及引用的类也由这个ClassLoader载入；“委托机制”是指先委托父装载器寻找目标类，只有在找不到的情况下才从自己的类路径中查找并装载目标类。这一点是从安全角度考虑的，试想如果有人编写了一个恶意的基础类（如java.lang.String）并装载到JVM中将会引起多么可怕的后果。但是由于有了“全盘负责委托机制”，java.lang.String永远是由根装载器来装载的，这样就避免了上述事件的发生。 </p>
-<p>####ClassLoader重要方法 </p>
-<p>在Java中，ClassLoader是一个抽象类，位于java.lang包中。下面对该类的一些重要接口方法进行介绍： </p>
+<h4 id="ClassLoader重要方法"><a href="#ClassLoader重要方法" class="headerlink" title="ClassLoader重要方法"></a>ClassLoader重要方法</h4><p>在Java中，ClassLoader是一个抽象类，位于java.lang包中。下面对该类的一些重要接口方法进行介绍： </p>
 <ul>
 <li><p>Class loadClass(String name)<br>  name参数指定类装载器需要装载类的名字，必须使用全限定类名，如com.baobaotao. beans.Car。该方法有一个重载方法loadClass(String name ,boolean resolve)，resolve参数告诉类装载器是否需要解析该类。在初始化类之前，应考虑进行类解析的工作，但并不是所有的类都需要解析，如果JVM只需要知道该类是否存在或找出该类的超类，那么就不需要进行解析。 </p>
 </li>
@@ -371,8 +368,7 @@
 <p>除JVM默认的三个ClassLoader以外，可以编写自己的第三方类装载器，以实现一些特殊的需求。类文件被装载并解析后，在JVM内将拥有一个对应的java.lang.Class类描述对象，该类的实例都拥有指向这个类描述对象的引用，而类描述对象又拥有指向关联ClassLoader的引用，如图3-4所示。 </p>
 <p><img src="/images/图3-4 类加载.jpg"></p>
 <p>每一个类在JVM中都拥有一个对应的java.lang.Class对象，它提供了类结构信息的描述。数组、枚举、注解以及基本Java类型（如int、double等），甚至void都拥有对应的Class对象。Class没有public的构造方法。Class对象是在装载类时由JVM通过调用类装载器中的defineClass()方法自动构造的。 </p>
-<p>###Java反射机制 </p>
-<p>Class反射对象描述类语义结构，可以从Class对象中获取构造函数、成员变量、方法类等类元素的反射对象，并以编程的方式通过这些反射对象对目标类对象进行操作。这些反射对象类在java.reflect包中定义，下面是最主要的三个反射类： </p>
+<h3 id="Java反射机制"><a href="#Java反射机制" class="headerlink" title="Java反射机制"></a>Java反射机制</h3><p>Class反射对象描述类语义结构，可以从Class对象中获取构造函数、成员变量、方法类等类元素的反射对象，并以编程的方式通过这些反射对象对目标类对象进行操作。这些反射对象类在java.reflect包中定义，下面是最主要的三个反射类： </p>
 <ul>
 <li><p>Constructor：类的构造函数反射类，通过Class#getConstructors()方法可以获得类的所有构造函数反射对象数组。在JDK5.0中，还可以通过getConstructor(Class… parameterTypes)获取拥有特定入参的构造函数反射对象。Constructor的一个主要方法是newInstance(Object[] initargs)，通过该方法可以创建一个对象类的实例，相当于new关键字。在JDK5.0中该方法演化为更为灵活的形式：newInstance (Object… initargs)。</p>
 </li>
@@ -429,6 +425,10 @@
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/01/Java动态代理/" rel="prev" title="Java动态代理">
+                Java动态代理 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -526,7 +526,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-count">7</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -585,7 +585,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java反射"><span class="nav-number">1.</span> <span class="nav-text">Java反射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单实例"><span class="nav-number">1.0.1.</span> <span class="nav-text">简单实例</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java反射"><span class="nav-number">1.</span> <span class="nav-text">Java反射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单实例"><span class="nav-number">1.0.1.</span> <span class="nav-text">简单实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类装载器ClassLoader"><span class="nav-number">1.0.2.</span> <span class="nav-text">类装载器ClassLoader</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#类装载器工作机制"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">类装载器工作机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ClassLoader重要方法"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">ClassLoader重要方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java反射机制"><span class="nav-number">1.0.3.</span> <span class="nav-text">Java反射机制</span></a></li></ol></li></ol></li></ol></div>
             
           </div>
         </section>
