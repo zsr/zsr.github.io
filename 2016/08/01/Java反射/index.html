@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Java," />
 
 
 
@@ -84,15 +84,24 @@
 
 
 
-<meta name="description" content="Develop Notes">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Hello Coder">
-<meta property="og:url" content="http://zsr.github.io/index.html">
+<meta name="description" content="Java反射
+######Java语言允许通过程序化的方式间接对Class进行操作，Class文件由类装载器装载后，在JVM中将形成一份描述Class结构的元信息对象，通过该元信息对象可以获知Class的结构信息：如构造函数、属性和方法等。Java允许用户借由这个Class相关的元信息对象间接调用Class对象的功能，这就为使用程序化方式操作Class对象开辟了途径。 
+简单实例我们将从一个简单例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java反射">
+<meta property="og:url" content="http://zsr.github.io/2016/08/01/Java反射/index.html">
 <meta property="og:site_name" content="Hello Coder">
-<meta property="og:description" content="Develop Notes">
+<meta property="og:description" content="Java反射
+######Java语言允许通过程序化的方式间接对Class进行操作，Class文件由类装载器装载后，在JVM中将形成一份描述Class结构的元信息对象，通过该元信息对象可以获知Class的结构信息：如构造函数、属性和方法等。Java允许用户借由这个Class相关的元信息对象间接调用Class对象的功能，这就为使用程序化方式操作Class对象开辟了途径。 
+简单实例我们将从一个简单例">
+<meta property="og:image" content="http://zsr.github.io/images/图3-4 类加载.jpg">
+<meta property="og:updated_time" content="2016-08-01T08:16:55.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello Coder">
-<meta name="twitter:description" content="Develop Notes">
+<meta name="twitter:title" content="Java反射">
+<meta name="twitter:description" content="Java反射
+######Java语言允许通过程序化的方式间接对Class进行操作，Class文件由类装载器装载后，在JVM中将形成一份描述Class结构的元信息对象，通过该元信息对象可以获知Class的结构信息：如构造函数、属性和方法等。Java允许用户借由这个Class相关的元信息对象间接调用Class对象的功能，这就为使用程序化方式操作Class对象开辟了途径。 
+简单实例我们将从一个简单例">
+<meta name="twitter:image" content="http://zsr.github.io/images/图3-4 类加载.jpg">
 
 
 
@@ -113,9 +122,9 @@
 
 
 
-  <link rel="canonical" href="http://zsr.github.io/"/>
+  <link rel="canonical" href="http://zsr.github.io/2016/08/01/Java反射/"/>
 
-  <title> Hello Coder </title>
+  <title> Java反射 | Hello Coder </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -145,9 +154,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -247,9 +254,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
   
@@ -269,10 +276,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2016/08/01/Java反射/" itemprop="url">
-                  Java反射
-                </a>
+                Java反射
               
             
           </h1>
@@ -319,9 +323,7 @@
       
 
       
-        
-          
-            <h1 id="Java反射"><a href="#Java反射" class="headerlink" title="Java反射"></a>Java反射</h1><hr>
+        <h1 id="Java反射"><a href="#Java反射" class="headerlink" title="Java反射"></a>Java反射</h1><hr>
 <p>######Java语言允许通过程序化的方式间接对Class进行操作，Class文件由类装载器装载后，在JVM中将形成一份描述Class结构的元信息对象，通过该元信息对象可以获知Class的结构信息：如构造函数、属性和方法等。Java允许用户借由这个Class相关的元信息对象间接调用Class对象的功能，这就为使用程序化方式操作Class对象开辟了途径。 </p>
 <h3 id="简单实例"><a href="#简单实例" class="headerlink" title="简单实例"></a>简单实例</h3><p>我们将从一个简单例子开始探访Java反射机制的征程，下面的Car类拥有两个构造函数、两个方法以及三个属性，如代码清单3-9所示： </p>
 <p>代码清单3-9  Car<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.baobaotao.reflect;  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Car</span> </span>&#123;  </div><div class="line">    <span class="keyword">private</span> String brand;  </div><div class="line">    <span class="keyword">private</span> String color;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maxSpeed; </div><div class="line">    <span class="comment">//①默认构造函数  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">()</span></span>&#123;&#125;  </div><div class="line">     <span class="comment">//②带参构造函数  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Car</span><span class="params">(String brand,String color,<span class="keyword">int</span> maxSpeed)</span></span>&#123;   </div><div class="line">        <span class="keyword">this</span>.brand = brand;  </div><div class="line">        <span class="keyword">this</span>.color = color;  </div><div class="line">        <span class="keyword">this</span>.maxSpeed = maxSpeed;  </div><div class="line">    &#125;  </div><div class="line">     <span class="comment">//③未带参的方法  </span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">introduce</span><span class="params">()</span> </span>&#123;   </div><div class="line">       System.out.println(<span class="string">"brand:"</span>+brand+<span class="string">";color:"</span>+color+<span class="string">";maxSpeed:"</span> +maxSpeed);  </div><div class="line">    &#125;  </div><div class="line">     <span class="comment">//省略参数的getter/Setter方法  </span></div><div class="line">     …  </div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -390,498 +392,100 @@
 <p>运行该类，打印出以下信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">drive private car! the color is:红色</div></pre></td></tr></table></figure></p>
 <p>在访问private、protected成员变量和方法时必须通过setAccessible(boolean access)方法取消Java语言检查，否则将抛出IllegalAccessException。如果JVM的安全管理器设置了相应的安全机制，调用该方法将抛出SecurityException。 </p>
 
-          
+      
+    </div>
+
+    <div>
+      
         
+
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
     <footer class="post-footer">
       
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/08/01/HashMap/" itemprop="url">
-                  HashMap
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-08-01T14:59:17+08:00" content="2016-08-01">
-              2016-08-01
-            </time>
-          </span>
-
+        <div class="post-tags">
           
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/08/01/HashMap/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/01/HashMap/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
+            <a href="/tags/Java/" rel="tag">#Java</a>
           
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <h1 id="OpenJDK-源代码阅读之-HashMap"><a href="#OpenJDK-源代码阅读之-HashMap" class="headerlink" title="OpenJDK 源代码阅读之 HashMap"></a>OpenJDK 源代码阅读之 HashMap</h1><hr>
-<h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><ul>
-<li>类继承关系</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">java.lang.Object</div><div class="line">    java.util.AbstractMap&lt;K,V&gt;</div><div class="line">        java.util.TreeMap&lt;K,V&gt;</div></pre></td></tr></table></figure>
-<ul>
-<li>定义 </li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public class TreeMap&lt;K,V&gt;</div><div class="line">extends AbstractMap&lt;K,V&gt;</div><div class="line">implements NavigableMap&lt;K,V&gt;, Cloneable, Serializable</div></pre></td></tr></table></figure>
-<ul>
-<li>要点</li>
-</ul>
-<p>1) 与 Hashtable 区别在于：非同步，允许 <code>null</code><br>2) 不保证次序，甚至不保证次序随时间不变<br>3) 基本操作 put, get 常量时间<br>4) 遍历操作 与 capacity+size 成正比<br>5) HashMap 性能与 <code>capacity</code> 和 <code>load factor</code> 相关，<code>load factor</code> 是当前元素个数与 <code>capacity</code> 的比值，通常设定为 <code>0.75</code>，如果此值过大，空间利用率高，但是冲突的可能性增加，因而可能导致查找时间增加，如果过小，反之。当元素个数大于 <code>capacity * load_factor</code> 时，<code>HashMap</code> 会重新安排 Hash 表。因此高效地使用 <code>HashMap</code> 需要预估元素个数，设置最佳的 <code>capacity</code> 和 <code>load factor</code> ，使得重新安排 Hash 表的次数下降。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/08/01/HashMap/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/01/HashMap/" rel="next" title="HashMap">
+                <i class="fa fa-chevron-left"></i> HashMap
+              </a>
+            
           </div>
-        
-      
-    </div>
 
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
+          <div class="post-nav-prev post-nav-item">
             
-            
-              
-                
-                <a class="post-title-link" href="/2016/08/01/git使用小记/" itemprop="url">
-                  git使用小记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-08-01T11:47:32+08:00" content="2016-08-01">
-              2016-08-01
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/08/01/git使用小记/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/01/git使用小记/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <h1 id="Git使用小记"><a href="#Git使用小记" class="headerlink" title="Git使用小记"></a>Git使用小记</h1><h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。</p>
-<!--![git](git流程.png)-->
-<p><img src="/images/git流程.png"/></p>
-<h2 id="git"><a href="#git" class="headerlink" title="git"></a>git</h2><h3 id="git工作流程"><a href="#git工作流程" class="headerlink" title="git工作流程"></a>git工作流程</h3><p>了解git，首先要弄清楚对象在被git管理过程中所处的4个阶段，分别是：工作目录、index(又称为暂存区)、本地仓库和远程仓库。</p>
-<p>从时间先后来讲，工作目录的内容是你当前看到的，也是最新的；index区标记了你当前工作目录中，哪些内容是被git管理的；而本地仓库保存了对象被提交过的各个版本，比起工作目录和暂存区的内容，它要更旧一些；远程仓库是本地仓库的异地备份，远程仓库的内容可能被分布在多个地点的处于协作关系的本地仓库修改，因此它可能与本地仓库同步，也可能不同步，但是它的内容是最旧的。</p>
-<p>任何对象都是在工作目录中诞生和被修改；任何修改都是从进入index区才开始被版本控制；只有把修改提交到本地仓库，该修改才能在仓库中留下痕迹；而要与协作者分享本地的修改，可以把它们push到远程仓库来共享。图最上方的add、commit、push等，展示了git仓库的产生过程。反过来，我们可以从远程历史仓库中获得本地仓库的最后一个版本，clone到本地，从本地检出对象的各个版本到index暂存区或工作目录中，从而实现任何对象或整个仓库的任意阶段状态的”回滚”。当正向和反向都能自由切换后，git就强大到无所不能了。<br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/08/01/git使用小记/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
+
+    <div class="post-spread">
       
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
 
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/07/29/ArrayList/" itemprop="url">
-                  ArrayList
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-07-29T23:31:36+08:00" content="2016-07-29">
-              2016-07-29
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/07/29/ArrayList/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/29/ArrayList/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h1 id="OpenJDK-源码阅读之-ArrayList"><a href="#OpenJDK-源码阅读之-ArrayList" class="headerlink" title="OpenJDK 源码阅读之 ArrayList"></a>OpenJDK 源码阅读之 ArrayList</h1><hr>
-<h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><ul>
-<li>类继承关系 </li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">java.lang.Object</div><div class="line">    java.util.AbstractCollection&lt;E&gt;</div><div class="line">        java.util.AbstractList&lt;E&gt;</div><div class="line">            java.util.ArrayList&lt;E&gt;</div></pre></td></tr></table></figure>
-<ul>
-<li>定义</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ArrayList</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractList</span>&lt;<span class="title">E</span>&gt;</div><div class="line">        <span class="keyword">implements</span> <span class="title">List</span>&lt;<span class="title">E</span>&gt;, <span class="title">RandomAccess</span>, <span class="title">Cloneable</span>, <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span></div><div class="line"></span>&#123;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><ul>
-<li>transient</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">transient</span> Object[] elementData;</div></pre></td></tr></table></figure>
-<p>声明为 <code>transient</code>后，这个字段不会被序列化。</p>
-<ul>
-<li>toArray</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</div><div class="line"> * Constructs a list containing the elements of the specified</div><div class="line"> * collection, in the order they are returned by the collection's</div><div class="line"> * iterator.</div><div class="line"> *</div><div class="line"> * <span class="doctag">@param</span> c the collection whose elements are to be placed into this list</div><div class="line"> * <span class="doctag">@throws</span> NullPointerException if the specified collection is null</div><div class="line"> */</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> </span>&#123;</div><div class="line">    elementData = c.toArray();</div><div class="line">    size = elementData.length;</div><div class="line">    <span class="comment">// c.toArray might (incorrectly) not return Object[] (see 6260652)</span></div><div class="line">    <span class="keyword">if</span> (elementData.getClass() != Object[].class)</div><div class="line">        elementData = Arrays.copyOf(elementData, size, Object[].class);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>注意对 <code>elementData</code> 的检查，<a href="http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652">Bug 6260652</a>中对此有详细描述。主要原因是 <code>c.toArray()</code> 不一定会返回　<code>Object[]</code> 类型的值。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/07/29/ArrayList/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
       
     </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/07/29/java-coding-style/" itemprop="url">
-                  java-coding-style
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-07-29T23:04:59+08:00" content="2016-07-29">
-              2016-07-29
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/07/29/java-coding-style/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/29/java-coding-style/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h1 id="Java编码风格"><a href="#Java编码风格" class="headerlink" title="Java编码风格"></a>Java编码风格</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这份文档源自Google Java编程风格规范，并根据我的想法，做了一些调整，当且仅当一个Java源文件符合此文档中的规则， 我们才认为它符合Ximalaya直播team的Java编程风格。</p>
-<p>与其它的编程风格指南一样，这里所讨论的不仅仅是编码格式美不美观的问题， 同时也讨论一些约定及编码标准。然而，这份文档主要侧重于我们所普遍遵循的规则，对于那些不是强制要求的，我们尽量不提供意见。</p>
-<h3 id="1-1-术语说明"><a href="#1-1-术语说明" class="headerlink" title="1.1 术语说明"></a>1.1 术语说明</h3><p>在本文档中，除非另有说明：</p>
-<p>术语<code>class</code>可表示一个普通类，枚举类，接口或是annotation类型(@interface)<br>术语<code>comment</code>只用来指代实现的注释(implementation comments)，我们不使用“documentation comments”一词，而是用Javadoc。<br>其他的术语说明会偶尔在后面的文档出现。</p>
-<h3 id="1-2-指南说明"><a href="#1-2-指南说明" class="headerlink" title="1.2 指南说明"></a>1.2 指南说明</h3><p>本文档中的示例代码并不作为规范。也就是说，虽然示例代码是遵循Ximalaya编程风格，但并不意味着这是展现这些代码的唯一方式。 示例中的格式选择不应该被强制定为规则。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/07/29/java-coding-style/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-  </section>
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
-  </nav>
-
+  </div>
 
 
           </div>
           
 
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
 
           
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/08/01/Java反射/"
+           data-title="Java反射" data-url="http://zsr.github.io/2016/08/01/Java反射/">
+      </div>
+    
+  </div>
+
 
         </div>
         
@@ -901,8 +505,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -965,6 +578,17 @@
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java反射"><span class="nav-number">1.</span> <span class="nav-text">Java反射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单实例"><span class="nav-number">1.0.1.</span> <span class="nav-text">简单实例</span></a></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
       
 
     </div>
@@ -1068,6 +692,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
 
   
 
