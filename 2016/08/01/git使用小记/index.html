@@ -84,33 +84,27 @@
 
 
 
-<meta name="description" content="#Git使用小记
-##前言：
-我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
+<meta name="description" content="Git使用小记前言：我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
 
-##git
-###git工作流程">
+
+gitgit工作流程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="git使用小记">
 <meta property="og:url" content="http://zsr.github.io/2016/08/01/git使用小记/index.html">
 <meta property="og:site_name" content="Hello Coder">
-<meta property="og:description" content="#Git使用小记
-##前言：
-我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
+<meta property="og:description" content="Git使用小记前言：我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
 
-##git
-###git工作流程">
-<meta property="og:image" content="http://zsr.github.io/git流程.png">
-<meta property="og:updated_time" content="2016-08-01T04:00:14.000Z">
+
+gitgit工作流程">
+<meta property="og:image" content="http://zsr.github.io/images/git流程.png">
+<meta property="og:updated_time" content="2016-08-01T04:11:05.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="git使用小记">
-<meta name="twitter:description" content="#Git使用小记
-##前言：
-我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
+<meta name="twitter:description" content="Git使用小记前言：我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。
 
-##git
-###git工作流程">
-<meta name="twitter:image" content="http://zsr.github.io/git流程.png">
+
+gitgit工作流程">
+<meta name="twitter:image" content="http://zsr.github.io/images/git流程.png">
 
 
 
@@ -332,17 +326,14 @@
       
 
       
-        <p>#Git使用小记</p>
-<p>##前言：</p>
-<p>我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。</p>
-<p><img src="git流程.png" alt="git"></p>
-<p>##git</p>
-<p>###git工作流程<br><a id="more"></a></p>
+        <h1 id="Git使用小记"><a href="#Git使用小记" class="headerlink" title="Git使用小记"></a>Git使用小记</h1><h2 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h2><p>我们写代码写完后总要进行管理，以前写的很多代码虽然写的不是很好，但因为没有一个比较好的代码管理习惯，所以很多都遗失掉了，为此现在都还觉得很可惜，近来在学习使用git来进行代码管理，git是一个很强大的分布式版本控制系统。</p>
+<!--![git](git流程.png)-->
+<p><img src="/images/git流程.png"></p>
+<h2 id="git"><a href="#git" class="headerlink" title="git"></a>git</h2><h3 id="git工作流程"><a href="#git工作流程" class="headerlink" title="git工作流程"></a>git工作流程</h3><a id="more"></a>
 <p>了解git，首先要弄清楚对象在被git管理过程中所处的4个阶段，分别是：工作目录、index(又称为暂存区)、本地仓库和远程仓库。</p>
 <p>从时间先后来讲，工作目录的内容是你当前看到的，也是最新的；index区标记了你当前工作目录中，哪些内容是被git管理的；而本地仓库保存了对象被提交过的各个版本，比起工作目录和暂存区的内容，它要更旧一些；远程仓库是本地仓库的异地备份，远程仓库的内容可能被分布在多个地点的处于协作关系的本地仓库修改，因此它可能与本地仓库同步，也可能不同步，但是它的内容是最旧的。</p>
 <p>任何对象都是在工作目录中诞生和被修改；任何修改都是从进入index区才开始被版本控制；只有把修改提交到本地仓库，该修改才能在仓库中留下痕迹；而要与协作者分享本地的修改，可以把它们push到远程仓库来共享。图最上方的add、commit、push等，展示了git仓库的产生过程。反过来，我们可以从远程历史仓库中获得本地仓库的最后一个版本，clone到本地，从本地检出对象的各个版本到index暂存区或工作目录中，从而实现任何对象或整个仓库的任意阶段状态的”回滚”。当正向和反向都能自由切换后，git就强大到无所不能了。</p>
-<p>###远程仓库操作命令</p>
-<ul>
+<h3 id="远程仓库操作命令"><a href="#远程仓库操作命令" class="headerlink" title="远程仓库操作命令"></a>远程仓库操作命令</h3><ul>
 <li><p>从远程仓库克隆仓库到本地：$ git clone git://github.com/**.git</p>
 </li>
 <li><p>查看远程仓库别名以及地址：$ git remote -v</p>
@@ -362,8 +353,7 @@
 <li><p>提交本地test分支作为远程的test分支：$git push origin test:test</p>
 </li>
 </ul>
-<p>###分支操作命令–branch</p>
-<ul>
+<h3 id="分支操作命令–branch"><a href="#分支操作命令–branch" class="headerlink" title="分支操作命令–branch"></a>分支操作命令–branch</h3><ul>
 <li><p>查看远程和本地所有分支：$ git branch -a</p>
 </li>
 <li><p>创建本地分支：$ git branch [name]</p>
@@ -383,8 +373,7 @@
 <li><p>删除远程分支：$ git push origin :heads/[name] 或 $ git push origin :[name]</p>
 </li>
 </ul>
-<p>###版本(tag)操作相关命令</p>
-<ul>
+<h3 id="版本-tag-操作相关命令"><a href="#版本-tag-操作相关命令" class="headerlink" title="版本(tag)操作相关命令"></a>版本(tag)操作相关命令</h3><ul>
 <li><p>查看版本：$ git tag</p>
 </li>
 <li><p>创建版本：$ git tag [name]</p>
@@ -404,8 +393,7 @@
 <li><p>创建带注释的tag：$ git tag -a [name] -m ‘yourMessage’</p>
 </li>
 </ul>
-<p>###子模块(submodule)相关操作命令</p>
-<ul>
+<h3 id="子模块-submodule-相关操作命令"><a href="#子模块-submodule-相关操作命令" class="headerlink" title="子模块(submodule)相关操作命令"></a>子模块(submodule)相关操作命令</h3><ul>
 <li><p>添加子模块：$ git submodule add [url] [path]</p>
 </li>
 <li><p>初始化子模块：$ git submodule init —-只在首次检出仓库时运行一次就行</p>
@@ -438,9 +426,7 @@
 </ul>
 </li>
 </ul>
-<p>###git撤销操作</p>
-<p>#####撤销已暂存的操作</p>
-<p>对于一些已经被git add后的文件，如果想要撤销刚刚的操作，就要进行如下操作:</p>
+<h3 id="git撤销操作"><a href="#git撤销操作" class="headerlink" title="git撤销操作"></a>git撤销操作</h3><h5 id="撤销已暂存的操作"><a href="#撤销已暂存的操作" class="headerlink" title="撤销已暂存的操作"></a>撤销已暂存的操作</h5><p>对于一些已经被git add后的文件，如果想要撤销刚刚的操作，就要进行如下操作:</p>
 <ul>
 <li>首先查看一下本地有哪些已经被add但是还未commit的数据，</li>
 </ul>
@@ -449,12 +435,9 @@
 <li>然后找到你要进行删掉的文件后，执行：</li>
 </ul>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset HEAD filename</div></pre></td></tr></table></figure>
-<p>#####撤销commit</p>
-<p>对于已经commit的数据，要回退的步骤为：</p>
+<h5 id="撤销commit"><a href="#撤销commit" class="headerlink" title="撤销commit"></a>撤销commit</h5><p>对于已经commit的数据，要回退的步骤为：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git rm -r --cached</div></pre></td></tr></table></figure>
-<p>###git 版本回退</p>
-<p>#####关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退</p>
-<p>1.先来说说本地的好了，本地的话就依次执行一下操作即可。</p>
+<h3 id="git-版本回退"><a href="#git-版本回退" class="headerlink" title="git 版本回退"></a>git 版本回退</h3><h5 id="关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退"><a href="#关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退" class="headerlink" title="关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退"></a>关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退</h5><p>1.先来说说本地的好了，本地的话就依次执行一下操作即可。</p>
 <p>根据-soft,-mixed,-hard，会对working tree和index和HEAD进行重置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">1.git reset -mixed：这种为默认方式，不带任何参数的git reset，它回退到某个版本，只保留源码，回退commit和index信息</div><div class="line">2.git reset -soft: 回退到某个版本，只回退了commit信息，不会恢复到index file一级。如果还要提交的话，直接commit即可。</div><div class="line">3.git reset -hard:彻底回退到某个版本，本地的源码也会变成上一个版本的内容，操作需要谨慎！！</div><div class="line">示例：</div><div class="line">* HEAD是指向最新的提交的，上一次的提交是HEAD^,上上次是HEAD^^,也可以写成HEAD~2,其中的--hard表示放弃所有本地改动</div><div class="line">git reset --hard HEAD^</div></pre></td></tr></table></figure></p>
 <p>或者也可以回退倒指定的版本</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git reset --hard &lt;哈希值&gt;</div></pre></td></tr></table></figure>
@@ -463,22 +446,17 @@
 <li>第一种就是比较暴力的方法，就是直接强制提交，git push -f,但是这个非常不推荐，除非你是自己一个人开发的小项目。</li>
 <li>第二种就是先将远程分支备份好以后直接删除，然后再将本地的回滚后的版本的push到远程分支上，这样就等于回退了版本。</li>
 </ul>
-<p>###git merge解冲突</p>
-<p>#####在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。</p>
-<p>这里假设有两个分支，一个是develop分支，一个是developby分支，develop分支是主要分支，这时候，我们可以 在developby分支里面运行</p>
+<h3 id="git-merge解冲突"><a href="#git-merge解冲突" class="headerlink" title="git merge解冲突"></a>git merge解冲突</h3><h5 id="在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。"><a href="#在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。" class="headerlink" title="在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。"></a>在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。</h5><p>这里假设有两个分支，一个是develop分支，一个是developby分支，develop分支是主要分支，这时候，我们可以 在developby分支里面运行</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git merge develop</div></pre></td></tr></table></figure>
 <p>这样的话就将将develop中的内容merge到了developby分支中，如果没有冲突的话，merge完成，如果有冲突的话，运行</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git diff</div></pre></td></tr></table></figure>
 <p>这样的话git会列出有冲突的文件，比如：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div><div class="line">printf (“test1″);</div><div class="line">=======</div><div class="line">printf (“test2″);</div><div class="line">&gt;&gt;&gt;&gt;&gt;&gt;&gt; develop</div></pre></td></tr></table></figure>
-<p>#####接下来我们来讲解一下里面的符号各代表什么意思。</p>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; 标记冲突的开始，后面的内同是当前分支中的内容。</p>
+<h5 id="接下来我们来讲解一下里面的符号各代表什么意思。"><a href="#接下来我们来讲解一下里面的符号各代表什么意思。" class="headerlink" title="接下来我们来讲解一下里面的符号各代表什么意思。"></a>接下来我们来讲解一下里面的符号各代表什么意思。</h5><p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; 标记冲突的开始，后面的内同是当前分支中的内容。</p>
 <p>HEAD 指向当前分支末梢的提交。</p>
 <p>=======之后，&gt;&gt;&gt;&gt;&gt;&gt;&gt;之前 是从develop分支上面merge过来的代码。&gt;&gt;&gt;&gt;&gt;&gt;&gt;之后跟的是要合并过来的分支的名称。</p>
-<p>#####然后我们就开始手动解冲突了</p>
-<p>这时候根据你的需要选择你要保留的是哪个分支上的代码，你要删除哪个分支上的代码，想要删除的代码就直接删掉就可以了，最后将多余符号删掉保存就可以了。</p>
-<p>###一般的代码管理流程：</p>
-<ul>
+<h5 id="然后我们就开始手动解冲突了"><a href="#然后我们就开始手动解冲突了" class="headerlink" title="然后我们就开始手动解冲突了"></a>然后我们就开始手动解冲突了</h5><p>这时候根据你的需要选择你要保留的是哪个分支上的代码，你要删除哪个分支上的代码，想要删除的代码就直接删掉就可以了，最后将多余符号删掉保存就可以了。</p>
+<h3 id="一般的代码管理流程："><a href="#一般的代码管理流程：" class="headerlink" title="一般的代码管理流程："></a>一般的代码管理流程：</h3><ul>
 <li><p>远程已经建完仓库后直接克隆到本地： $ git clone [仓库地址]</p>
 </li>
 <li><p>查看本地和远程的branch：$ git branch -a</p>
@@ -694,7 +672,7 @@
               
             
             
-              <p class="post-toc-empty">此文章未包含目录</p>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Git使用小记"><span class="nav-number">1.</span> <span class="nav-text">Git使用小记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言："><span class="nav-number">1.1.</span> <span class="nav-text">前言：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#git"><span class="nav-number">1.2.</span> <span class="nav-text">git</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#git工作流程"><span class="nav-number">1.2.1.</span> <span class="nav-text">git工作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#远程仓库操作命令"><span class="nav-number">1.2.2.</span> <span class="nav-text">远程仓库操作命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分支操作命令–branch"><span class="nav-number">1.2.3.</span> <span class="nav-text">分支操作命令–branch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#版本-tag-操作相关命令"><span class="nav-number">1.2.4.</span> <span class="nav-text">版本(tag)操作相关命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#子模块-submodule-相关操作命令"><span class="nav-number">1.2.5.</span> <span class="nav-text">子模块(submodule)相关操作命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#git撤销操作"><span class="nav-number">1.2.6.</span> <span class="nav-text">git撤销操作</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#撤销已暂存的操作"><span class="nav-number">1.2.6.0.1.</span> <span class="nav-text">撤销已暂存的操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#撤销commit"><span class="nav-number">1.2.6.0.2.</span> <span class="nav-text">撤销commit</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#git-版本回退"><span class="nav-number">1.2.7.</span> <span class="nav-text">git 版本回退</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退"><span class="nav-number">1.2.7.0.1.</span> <span class="nav-text">关于版本回退略微有点小复杂，因为回退的版本涉及到两种情况，一种就是本地的版本回退，另一种则是本地和远程仓库都提交后的版本回退</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#git-merge解冲突"><span class="nav-number">1.2.8.</span> <span class="nav-text">git merge解冲突</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。"><span class="nav-number">1.2.8.0.1.</span> <span class="nav-text">在进行git管理时在对两个分支进行merge时难免会产生冲突，这时候就要对两个分支进行解冲突。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#接下来我们来讲解一下里面的符号各代表什么意思。"><span class="nav-number">1.2.8.0.2.</span> <span class="nav-text">接下来我们来讲解一下里面的符号各代表什么意思。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#然后我们就开始手动解冲突了"><span class="nav-number">1.2.8.0.3.</span> <span class="nav-text">然后我们就开始手动解冲突了</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一般的代码管理流程："><span class="nav-number">1.2.9.</span> <span class="nav-text">一般的代码管理流程：</span></a></li></ol></li></ol></li></ol></div>
             
           </div>
         </section>
