@@ -11,7 +11,7 @@
 </li>
 <li><p>JobTracker：初始化作业，分配作业，与TaskTracker通信，协调整个作业的执行；</p>
 </li>
-<li><p>TaskTracker：保持与JobTracker的通信，在分配的数据片段上执行Map或Reduce任务，TaskTracker和JobTracker的不同有个很重要的方面，就是在执行任务时候TaskTracker可以有n多个，JobTracker则只会有一个（JobTracker只能有一个就和hdfs里namenode一样存在单点故障，我会在后面的mapreduce的相关问题里讲到这个问题的）</p>
+<li><p>TaskTracker：保持与JobTracker的通信，在分配的数据片段上执行Map或Reduce任务，TaskTracker和JobTracker的不同有个很重要的方面，就是在执行任务时候TaskTracker可以有n多个，JobTracker则只会有一个</p>
 </li>
 <li><p>Hdfs：保存作业的数据、配置信息等等，最后的结果也是保存在hdfs上面</p>
 </li>
