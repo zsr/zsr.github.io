@@ -26,9 +26,7 @@
 </ol>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">if (bindingResult.hasErrors()) &#123;</div><div class="line">        throw new IllegalArgumentException(&quot;request params must be not null.&quot;);</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
 <h5 id="Validator-Model"><a href="#Validator-Model" class="headerlink" title="Validator Model"></a>Validator Model</h5><p>在需要校验的model字段前面加上注解(hibernate validator):</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">public class SendGiftForm &#123;</div><div class="line">  @NotNull</div><div class="line">  private Long roomId; </div><div class="line">  @NotNull</div><div class="line">  private Long liveId; </div><div class="line">  </div><div class="line">  	```</div></pre></td></tr></table></figure>
-<p> }</p>
-<p>```</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">public class SendGiftForm &#123;</div><div class="line">  @NotNull</div><div class="line">  private Long roomId; </div><div class="line">  @NotNull</div><div class="line">  private Long liveId; </div><div class="line">  </div><div class="line"> &#125;</div></pre></td></tr></table></figure>
 <h3 id="参考链接："><a href="#参考链接：" class="headerlink" title="参考链接："></a>参考链接：</h3><p><a href="http://www.codejava.net/frameworks/spring/spring-mvc-form-validation-example-with-bean-validation-api" target="_blank" rel="external">Spring Form Validation</a></p>
 ]]></content>
     </entry>
