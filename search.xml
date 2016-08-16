@@ -4,6 +4,45 @@
   
     
     <entry>
+      <title><![CDATA[Spring MVC ApplicationContext]]></title>
+      <url>http://zsr.github.io/2016/08/16/ApplicationContext/</url>
+      <content type="html"><![CDATA[<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>以只有1个Servlet的简单情况为例，一般涉及到3个配置文件：web.xml，applicationContext.xml，xxx-servlet.xml。</p>
+<h3 id="web-xml"><a href="#web-xml" class="headerlink" title="web.xml"></a>web.xml</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">&lt;context-param&gt;  </div><div class="line">         &lt;param-name&gt;contextConfigLocation&lt;/param-name&gt;  </div><div class="line">         &lt;param-value&gt;classpath:/applicationContext.xml&lt;/param-value&gt;  </div><div class="line">&lt;/context-param&gt;  </div><div class="line">&lt;listener&gt;  </div><div class="line">         &lt;listener-class&gt;org.springframework.web.context.ContextLoaderListener&lt;/listener-class&gt;  </div><div class="line">&lt;/listener&gt;  </div><div class="line">&lt;servlet&gt;  </div><div class="line">         &lt;servlet-name&gt;xxx&lt;/servlet-name&gt;  </div><div class="line">         &lt;servlet-class&gt;org.springframework.web.servlet.DispatcherServlet&lt;/servlet-class&gt;  </div><div class="line">         &lt;load-on-startup&gt;1&lt;/load-on-startup&gt;  </div><div class="line">&lt;/servlet&gt;  </div><div class="line">&lt;servlet-mapping&gt;  </div><div class="line">         &lt;servlet-name&gt;xxx&lt;/servlet-name&gt;  </div><div class="line">         &lt;url-pattern&gt;*.html&lt;/url-pattern&gt;  </div><div class="line">&lt;/servlet-mapping&gt;</div></pre></td></tr></table></figure>
+<p>在这种情况下，系统会生成2个ApplicationContext，确切的说是2个WebApplicationContext.</p>
+<h3 id="ROOT-ApplicationContext"><a href="#ROOT-ApplicationContext" class="headerlink" title="ROOT ApplicationContext"></a>ROOT ApplicationContext</h3><p>在Tomcat启动时，通过注册的监听器ContextLoaderListener，Spring初始化WebApplicationContext并保存到ServletContext中，初始化使用的配置文件位置由contextConfigLocation参数确定。该Context为整个框架中的ROOT Context，其他的Context都会作为其子节点或子孙节点进行关联。</p>
+<p>WebApplicationContext和ServletContext互相保存对方的引用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">//保存到ServletContext中  </div><div class="line">servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE,this.context);</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">//保存ServletContext  </div><div class="line">wac.setServletContext(sc);</div></pre></td></tr></table></figure>
+<h3 id="xxx-ApplicationContext"><a href="#xxx-ApplicationContext" class="headerlink" title="xxx ApplicationContext"></a>xxx ApplicationContext</h3><p>Tomcat生成xxx Servlet时，DispatcherServlet会使用xxx-servlet.xml（除非显示指定其他文件）初始化WebApplicationContext，将其父节点设为ROOT Context，并保存到ServletContext中。</p>
+<p>在createWebApplicationContext()方法中，设置父节点：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wac.setParent(parent);</div></pre></td></tr></table></figure>
+<p>在configureAndRefreshWebApplicationContext()方法中保存ServletContext：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">wac.setServletContext(getServletContext());  </div><div class="line">wac.setServletConfig(getServletConfig());</div></pre></td></tr></table></figure>
+<p>在initWebApplicationContext()方法中将自己保存到ServletContext中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">// Publish the context as a servlet context attribute.  </div><div class="line">String attrName = getServletContextAttributeName();  </div><div class="line">getServletContext().setAttribute(attrName, wac);</div></pre></td></tr></table></figure>
+<p>ServletContext、ROOT Context和xxx Context三者引用之间的关系如下：</p>
+<p><img src="/images/Application关系.jpg"></p>
+<p>获取的方法：</p>
+<ul>
+<li>ServletContext：</li>
+</ul>
+<p>无论是在ROOT还是xxx Context中，可以通过:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">WebApplicationContext. getServletContext();</div></pre></td></tr></table></figure>
+<ul>
+<li>ROOT Context：</li>
+</ul>
+<p>该Context是” org.springframework.web.context. WebApplicationContext. ROOT”为Key保存在ServletContext中。可以使用Spring提供的工具类方法获取：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">WebApplicationContextUtils.getWebApplicationContext(ServletContextsc)</div></pre></td></tr></table></figure>
+<p>在xxx Context中可以通过getParent得到ROOT Context。</p>
+<ul>
+<li>xxx Context：</li>
+</ul>
+<p>该Context是以” org.springframework.web.servlet.FrameworkServlet.CONTEXT.xxx”为KEY(xxx为web.xml中定义的Servlet名称)，保存在ServletContext中。可以使用Spring提供的工具类方法获取：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">WebApplicationContextUtils.getWebApplicationContext(ServletContextsc, String attrName)</div></pre></td></tr></table></figure>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[redis 持久化]]></title>
       <url>http://zsr.github.io/2016/08/16/redis-%E6%8C%81%E4%B9%85%E5%8C%96/</url>
       <content type="html"><![CDATA[<h1 id="Redis的持久化"><a href="#Redis的持久化" class="headerlink" title="Redis的持久化"></a>Redis的持久化</h1><p>Redis有两种持久化的方式：快照（RDB文件）和追加式文件（AOF文件）：</p>
