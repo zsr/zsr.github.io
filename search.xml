@@ -4,6 +4,137 @@
   
     
     <entry>
+      <title><![CDATA[java调试-jstat命令]]></title>
+      <url>http://zsr.github.io/2016/08/18/java%E8%B0%83%E8%AF%95-jstat%E5%91%BD%E4%BB%A4/</url>
+      <content type="html"><![CDATA[<h2 id="jstat命令使用"><a href="#jstat命令使用" class="headerlink" title="jstat命令使用"></a>jstat命令使用</h2><p>jstat是一个可以用于观察java应用程序运行时相关信息的工具，功能非常强大，可以通过它<strong>查看堆信息的详细情况。</strong></p>
+<h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><p>jstat命令的基本使用语法如下：</p>
+<p><strong>jstat -option [-t] [-h] pid [interval] [count]</strong></p>
+<ul>
+<li>选项option可以由以下值构成。<ul>
+<li>-class：显示ClassLoader的相关信息。</li>
+<li>-compiler：显示JIT编译的相关信息。</li>
+<li><strong>-gc：显示与gc相关的堆信息。</strong></li>
+<li>-gccapacity：显示各个代的容量及使用情况。</li>
+<li>-gccause：显示垃圾回收的相关信息（同-gcutil），同时显示最后一次或当前正在发生的垃圾回收的诱因。</li>
+<li>-gcnew：显示新生代信息。</li>
+<li>-gcnewcapacity：显示新生代大小与使用情况。</li>
+<li>-gcold：显示老生代和永久代的信息。</li>
+<li>-gcoldcapacity：显示老年代的大小。</li>
+<li>-gcpermcapacity：显示永久代的大小。</li>
+<li>-gcutil：显示垃圾收集信息。</li>
+<li>-printcompilation：输出JIT编译的方法信息。</li>
+</ul>
+</li>
+<li>-t参数可以在输出信息前面加上一个Timestamp列，显示程序运行的时间。</li>
+<li>-h参数可以在周期性的数据输出时，输出多少行数据后，跟着输出一个表头信息。</li>
+<li>interval参数用于指定输出统计数据的周期，单位为毫秒(ms)。</li>
+<li>count参数用于指定一共输出多少次数据。</li>
+</ul>
+<h3 id="详细使用"><a href="#详细使用" class="headerlink" title="详细使用"></a>详细使用</h3><h5 id="class使用"><a href="#class使用" class="headerlink" title="-class使用"></a>-class使用</h5><p>下面命令输出pid为2500这个进程的ClassLoader相关信息，每秒统计一次信息，一共输出3次。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -class -t 13640 1000 3</div><div class="line">Timestamp       Loaded  Bytes  Unloaded  Bytes     Time</div><div class="line">         1522.7    414   827.5        0     0.0       0.13</div><div class="line">         1523.7    414   827.5        0     0.0       0.13</div><div class="line">         1524.7    414   827.5        0     0.0       0.13</div></pre></td></tr></table></figure>
+<p>Loaded表示载入的类的数量，第一个Bytes表示载入的类的合计大小，Unloaded表示卸载的类数量，第二个Bytes表示卸载的类的合计大小，Time表示加载和卸载类花的总的时间。</p>
+<h5 id="compiler使用"><a href="#compiler使用" class="headerlink" title="-compiler使用"></a>-compiler使用</h5><p>下面的命令查看JIT编译的信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -compiler -t 13640</div><div class="line">Timestamp       Compiled Failed Invalid   Time   FailedType FailedMethod</div><div class="line">         1814.8       99      0       0     0.51          0</div></pre></td></tr></table></figure>
+<p>Compiled表示编译任务执行的次数，Failed表示编译失败的次数，Invalid表示编译不可用的次数，Time表示编译的总耗时，FailedType表示最后一次编译的类型，FailedMethod表示最后一次编译失败的类名和方法名。</p>
+<h5 id="gc使用"><a href="#gc使用" class="headerlink" title="-gc使用"></a>-gc使用</h5><p>下面的命令显示与gc相关的堆信息的输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -gc 16309</div><div class="line">S0C     S1C     S0U      S1U   EC       EU        OC         OU          MC     MU </div><div class="line">45056.0 55296.0 44588.0  0.0   336896.0 222238.4  171520.0   86902.0     -      - </div><div class="line"></div><div class="line">CCSC CCSU YGC YGCT   FGC     FGCT      GCT</div><div class="line">-     -    8  0.312   1      1.328    1.640</div></pre></td></tr></table></figure>
+<ul>
+<li>S0C：s0(from)的大小(KB)</li>
+<li>S1C：s1(from)的大小(KB)</li>
+<li>S0U：s0(from)已使用的空间(KB)</li>
+<li>S1U：s1(from)已经使用的空间(KB)</li>
+<li>EC：eden区的大小(KB)</li>
+<li>EU：eden区已经使用的空间(KB)</li>
+<li>OC：老年代大小(KB)</li>
+<li>OU：老年代已经使用的空间(KB)</li>
+<li>MC：方法区大小(KB)</li>
+<li>MU：方法区使用大小(KB)</li>
+<li>CCSC:压缩类空间大小(KB)</li>
+<li>CCSU:压缩类空间使用大小(KB)</li>
+<li>YGC：新生代gc次数</li>
+<li>YGCT：新生代gc耗时</li>
+<li>FGC：Full gc次数</li>
+<li>FGCT：Full gc耗时</li>
+<li>GCT：gc总耗时</li>
+</ul>
+<h5 id="gccapacity使用"><a href="#gccapacity使用" class="headerlink" title="-gccapacity使用"></a>-gccapacity使用</h5><p>下面的命令显示了各个代的信息，与-gc相比，它不仅输出了各个代的当前大小，还输出了各个代的最大值与最小值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -gccapacity 16309</div><div class="line"> NGCMN    NGCMX     NGC     S0C     S1C       EC        OGCMN      OGCMX   </div><div class="line">44032.0 699392.0 626176.0 45056.0 55296.0 336896.0    87040.0    1397760.0    </div><div class="line"> OGC       OC       MCMN    MCMX     MC       CCSMN    CCSMX     CCSC    YGC    FGC</div><div class="line">171520.0  171520.0    -       -      -        -        -        -      8        1</div><div class="line">nalideMacBook-Pro-4:~ nali$</div></pre></td></tr></table></figure>
+<ul>
+<li>NGCMN：新生代最小值(KB)</li>
+<li>NGCMX：新生代最大值(KB)</li>
+<li>NGC：当前新生代大小(KB)</li>
+<li>OGCMN：老年大最小值(KB)</li>
+<li>OGCMX：老年代最大值(KB)</li>
+<li>OGC：当前老年代大小(KB)</li>
+<li>MCMN：方法区最小值(KB)</li>
+<li>MCMX：方法区最大值(KB)</li>
+<li>CCSMN：压缩类空间最小值(KB)</li>
+<li>CCSMX：压缩类空间最大值(KB)</li>
+</ul>
+<h5 id="gccause使用"><a href="#gccause使用" class="headerlink" title="-gccause使用"></a>-gccause使用</h5><p>下面命令显示最近一次gc的原因，以及当前gc的原因：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -gccause 16309</div><div class="line">S0     S1     E      O      M     CCS    YGC    YGCT    FGC    FGCT     GCT   </div><div class="line">98.96  0.00  65.97  50.67   -      -      8      0.312    1    1.328    1.640</div><div class="line">LGCC                  GCC        </div><div class="line">Allocation Failure   No GC</div></pre></td></tr></table></figure>
+<ul>
+<li>LGCC：上次gc的原因，可以看到上次gc的原因是Allocation Failure</li>
+<li>GCC：当前gc的原因，当前没有gc</li>
+</ul>
+<h5 id="gcnew使用"><a href="#gcnew使用" class="headerlink" title="-gcnew使用"></a>-gcnew使用</h5><p>下面的命令显示新生代的详细信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -gcnew 16309</div><div class="line"> S0C    S1C     S0U        S1U  TT MTT  DSS      EC       EU        YGC   YGCT</div><div class="line">45056.0 55296.0 44588.0    0.0  5  15   55296.0  336896.0 222238.4  8     0.312</div></pre></td></tr></table></figure>
+<ul>
+<li>TT：新生代对象晋升到老年代对象的年龄。</li>
+<li>MTT：新生代对象晋升到老年代对象的年龄的最大值。</li>
+<li>DSS：所需的Survivor区的大小。</li>
+</ul>
+<h5 id="gcnewcapacity使用"><a href="#gcnewcapacity使用" class="headerlink" title="-gcnewcapacity使用"></a>-gcnewcapacity使用</h5><p>下面的命令详细输出了新生代各个区的大小信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jstat -gcnewcapacity 16309</div><div class="line">NGCMN    NGCMX    NGC      S0CMX     S0C     S1CMX     S1C       ECMX        EC      </div><div class="line">44032.0  699392.0 626176.0 232960.0  45056.0 232960.0  55296.0   698368.0  336896.0     </div><div class="line">YGC   FGC</div><div class="line">8     1</div><div class="line">```   </div><div class="line"></div><div class="line">- S0CMX：s0区的最大值(KB)</div><div class="line">- S1CMX：s1区的最大值(KB)</div><div class="line">- ECMX：eden区的最大值(KB)</div><div class="line"></div><div class="line">##### -gcold使用</div><div class="line"></div><div class="line">下面的命令显示老年代gc概况：</div></pre></td></tr></table></figure>
+<p>nalideMacBook-Pro-4:~ nali$ jstat -gcold 16309<br>MC   MU      CCSC     CCSU       OC          OU       YGC    FGC    FGCT     GCT</p>
+<ul>
+<li><ul>
+<li><ul>
+<li><ul>
+<li>171520.0      86902.0     8     1      1.328    1.640<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">##### -gcoldcapacity使用</div><div class="line"></div><div class="line">下面的命令用于显示老年代的容量信息：</div></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>nalideMacBook-Pro-4:~ nali$ jstat -gcoldcapacity 16309<br>OGCMN       OGCMX        OGC         OC       YGC   FGC    FGCT     GCT<br>87040.0   1397760.0    171520.0    171520.0     8     1    1.328    1.640<br>```</p>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[java调试-jps命令]]></title>
+      <url>http://zsr.github.io/2016/08/18/java%E8%B0%83%E8%AF%95-jps%E5%91%BD%E4%BB%A4/</url>
+      <content type="html"><![CDATA[<h2 id="jps命令使用"><a href="#jps命令使用" class="headerlink" title="jps命令使用"></a>jps命令使用</h2><p>jps命令类似于linux下的ps命令，用于列出当前正在运行的所有java进程。</p>
+<h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><p>直接运行不加任何参数就能列出所有java进程的pid和类的短名称。例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jps</div><div class="line">13698 Jps</div><div class="line">13640 TestJava</div><div class="line">50360</div></pre></td></tr></table></figure>
+<h3 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h3><ul>
+<li>-q参数</li>
+</ul>
+<p>-q可以指定jps只列出pid,而不输出类的短名称，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jps -q</div><div class="line">13959</div><div class="line">13640</div><div class="line">50360</div></pre></td></tr></table></figure>
+<ul>
+<li>-m参数</li>
+</ul>
+<p>-m参数可以用于列出传递给java进程主函数的参数，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jps -m</div><div class="line">13640 TestJava</div><div class="line">50360</div><div class="line">14029 Jps -m</div></pre></td></tr></table></figure>
+<p>可以看到传递给jps（jps本身也是java进程）进程的参数就是-m</p>
+<ul>
+<li>-l参数</li>
+</ul>
+<p>-l参数用于输出主类的完整路径，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jps -l</div><div class="line">14198 sun.tools.jps.Jps</div><div class="line">13640 com.david.test.TestJava</div><div class="line">50360</div></pre></td></tr></table></figure>
+<ul>
+<li>-v参数</li>
+</ul>
+<p>-v参数可以列出传递给java虚拟机的参数，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:~ nali$ jps -v</div><div class="line">14290 Jps -Dapplication.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home -Xms8m</div><div class="line">13640 TestJava -agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:56353 -Dfile.encoding=UTF-8</div><div class="line">50360  -Dosgi.requiredJavaVersion=1.7 -XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts -XX:MaxPermSize=256m -Xms256m -Xmx2048m -Xdock:icon=../Resources/Eclipse.icns -XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</div></pre></td></tr></table></figure>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Hashtable]]></title>
       <url>http://zsr.github.io/2016/08/17/HashTable/</url>
       <content type="html"><![CDATA[<h1 id="OpenJDK-源代码阅读之-Hashtable"><a href="#OpenJDK-源代码阅读之-Hashtable" class="headerlink" title="OpenJDK 源代码阅读之 Hashtable"></a>OpenJDK 源代码阅读之 Hashtable</h1><hr>
