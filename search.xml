@@ -42,7 +42,95 @@
     <entry>
       <title><![CDATA[mysql 锁]]></title>
       <url>http://zsr.github.io/2016/08/18/mysql-%E9%94%81/</url>
-      <content type="html"></content>
+      <content type="html"><![CDATA[<h2 id="mysql-锁机制"><a href="#mysql-锁机制" class="headerlink" title="mysql 锁机制"></a>mysql 锁机制</h2><p>数据库为了维护事务的性质，尤其是一致性和隔离性，一般使用加锁这种方式。同时数据库又是个高并发的应用，同一时间会有大量的并发访问，如果加锁过度，会极大的降低并发处理能力。所以对于加锁的处理，可以说就是数据库对于事务处理的精髓所在。</p>
+<h3 id="悲观锁和乐观锁"><a href="#悲观锁和乐观锁" class="headerlink" title="悲观锁和乐观锁"></a>悲观锁和乐观锁</h3><ul>
+<li><p>悲观锁</p>
+<p>  正如其名，它指的是对数据被外界（包括本系统当前的其他事务，以及来自外部系统的事务处理）修改持保守态度，因此，在整个数据处理过程中，将数据处于锁定状态。悲观锁的实现，往往依靠数据库提供的锁机制（也只有数据库层提供的锁机制才能真正保证数据访问的排他性，否则，即使在本系统中实现了加锁机制，也无法保证外部系统不会修改数据）。</p>
+<p>  在悲观锁的情况下，为了保证事务的隔离性，就需要一致性锁定读。读取数据时给加锁，其它事务无法修改这些数据。修改删除数据时也要加锁，其它事务无法读取这些数据。</p>
+</li>
+<li><p>乐观锁</p>
+<p>  相对悲观锁而言，乐观锁机制采取了更加宽松的加锁机制。悲观锁大多数情况下依靠数据库的锁机制实现，以保证操作最大程度的独占性。但随之而来的就是数据库性能的大量开销，特别是对长事务而言，这样的开销往往无法承受。</p>
+</li>
+</ul>
+<p>乐观锁，大多是基于数据版本（ Version ）记录机制实现。数据版本:即为数据增加一个版本标识，在基于数据库表的版本解决方案中，一般是通过为数据库表增加一个 “version” 字段来实现。读取出数据时，将此版本号一同读出，之后更新时，对此版本号加一。此时，将提交数据的版本数据与数据库表对应记录的当前版本信息进行比对，如果提交的数据版本号大于数据库表当前版本号，则予以更新，否则认为是过期数据。</p>
+<h3 id="多版本的并发控制协议-以乐观锁为理论基础"><a href="#多版本的并发控制协议-以乐观锁为理论基础" class="headerlink" title="多版本的并发控制协议(以乐观锁为理论基础)"></a>多版本的并发控制协议(以乐观锁为理论基础)</h3><p>MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control) (注：与MVCC相对的，是基于锁的并发控制，Lock-Based Concurrency Control)。MVCC最大的好处：读不加锁，读写不冲突。在读多写少的OLTP应用中，读写不冲突是非常重要的，极大的增加了系统的并发性能，现阶段几乎所有的RDBMS，都支持了MVCC。</p>
+<p>在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回的记录，都会加上锁，保证其他事务不会再并发修改这条记录。</p>
+<p>以MySQL InnoDB为例：</p>
+<ul>
+<li>快照读：简单的select操作，属于快照读，不加锁。(当然，也有例外，下面会分析)<ul>
+<li>select * from table where ?;</li>
+</ul>
+</li>
+<li><p>当前读：特殊的读操作，插入/更新/删除操作，属于当前读，需要加锁。</p>
+<ul>
+<li>select * from table where ? lock in share mode;</li>
+<li>select * from table where ? for update;</li>
+<li>insert into table values (…);</li>
+<li>update table set ? where ?;</li>
+<li><p>delete from table where ?;</p>
+<p>所有以上的语句，都属于当前读，读取记录的最新版本。并且，读取之后，还需要保证其他并发事务不能修改当前记录，对读取记录加锁。其中，除了第一条语句，对读取记录加S锁 (共享锁)外，其他的操作，都加的是X锁 (排它锁)。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>插入/更新/删除 操作，都归为当前读.如更新 操作，在数据库中的执行流程：</p>
+<p><img src="/images/mysql锁机制1-1.jpg"></p>
+<p>从图中，可以看到，一个Update操作的具体流程。当Update SQL被发给MySQL后，MySQL Server会根据where条件，读取第一条满足条件的记录，然后InnoDB引擎会将第一条记录返回，并加锁 (current read)。待MySQL Server收到这条加锁的记录之后，会再发起一个Update请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有满足条件的记录为止。因此，Update操作内部，就包含了一个当前读。同理，Delete操作也一样。Insert操作会稍微有些不同，简单来说，就是Insert操作可能会触发Unique Key的冲突检查，也会进行一个当前读。</p>
+<p><strong>注：根据上图的交互，针对一条当前读的SQL语句，InnoDB与MySQL Server的交互，是一条一条进行的，因此，加锁也是一条一条进行的。先对一条满足条件的记录加锁，返回给MySQL Server，做一些DML操作(数据操纵语言DML:insert, update, delete)；然后在读取下一条加锁，直至读取完毕。</strong></p>
+<h3 id="两段锁"><a href="#两段锁" class="headerlink" title="两段锁"></a>两段锁</h3><p>数据库遵循的是两段锁协议，将事务分成两个阶段，加锁阶段和解锁阶段</p>
+<p>加锁阶段：在该阶段可以进行加锁操作。在对任何数据进行读操作之前要申请并获得S锁（共享锁，其它事务可以继续加共享锁，但不能加排它锁），在进行写操作之前要申请并获得X锁（排它锁，其它事务不能再获得任何锁）。加锁不成功，则事务进入等待状态，直到加锁成功才继续执行。<br>解锁阶段：当事务释放了一个封锁以后，事务进入解锁阶段，在该阶段只能进行解锁操作不能再进行加锁操作。</p>
+<p>以mysql为例：</p>
+<p><img src="/images/mysql锁机制1-2.jpg"></p>
+<p>两段锁协议可以保证事务的并发调度是串行化，加锁阶段：只加锁，不放锁。解锁阶段：只放锁，不加锁。</p>
+<h3 id="事务的四种隔离级别"><a href="#事务的四种隔离级别" class="headerlink" title="事务的四种隔离级别"></a>事务的四种隔离级别</h3><p>事务隔离级别：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">隔离级别</th>
+<th style="text-align:center">脏读（Dirty Read)</th>
+<th style="text-align:center">不可重复读（NonRepeatable Read)</th>
+<th style="text-align:center">幻读（Phantom Read)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">未提交读（Read uncommitted）</td>
+<td style="text-align:center">可能</td>
+<td style="text-align:center">可能</td>
+<td style="text-align:center">可能</td>
+</tr>
+<tr>
+<td style="text-align:center">已提交读（Read committed）</td>
+<td style="text-align:center">不可能</td>
+<td style="text-align:center">可能</td>
+<td style="text-align:center">可能</td>
+</tr>
+<tr>
+<td style="text-align:center">可重复读（Repeatable read）</td>
+<td style="text-align:center">不可能</td>
+<td style="text-align:center">不可能</td>
+<td style="text-align:center">可能</td>
+</tr>
+<tr>
+<td style="text-align:center">可串行化（Serializable ）</td>
+<td style="text-align:center">不可能</td>
+<td style="text-align:center">不可能</td>
+<td style="text-align:center">不可能</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>未提交读(Read Uncommitted)：允许脏读，也就是可能读取到其他会话中未提交事务修改的数据</li>
+<li>提交读(Read Committed)：只能读取到已经提交的数据。Oracle等多数数据库默认都是该级别 (不重复读);针对当前读，RC隔离级别保证对读取到的记录加锁 (记录锁)，存在幻读现象。</li>
+<li>可重复读(Repeated Read)：可重复读。在同一个事务内的查询都是事务开始时刻一致的，<strong>InnoDB默认级别</strong>。在SQL标准中，该隔离级别消除了不可重复读，但是还存在幻象读;mysql RR隔离级别保证对读取到的记录加锁 (记录锁)，同时保证对<strong>读取的范围加锁(GAP间隙锁)</strong>，新的满足查询条件的记录不能够插入,不存在幻读现象。</li>
+<li>串行读(Serializable)：完全串行化的读，每次读都需要获得表级共享锁，读写相互都会阻塞</li>
+</ul>
+<h4 id="不可重复读和幻读的区别"><a href="#不可重复读和幻读的区别" class="headerlink" title="不可重复读和幻读的区别"></a>不可重复读和幻读的区别</h4><p>不可重复读重点在于update和delete，而幻读的重点在于insert。</p>
+<p>如果使用锁机制来实现这两种隔离级别，在可重复读中，该sql第一次读取到数据后，就将这些数据加锁，其它事务无法修改这些数据，就可以实现可重复读了。但这种方法却无法锁住insert的数据，所以当事务A先前读取了数据，或者修改了全部数据，事务B还是可以insert数据提交，这时事务A就会发现莫名其妙多了一条之前没有的数据，这就是幻读，不能通过行锁来避免。需要Serializable隔离级别 ，读用读锁，写用写锁，读锁和写锁互斥，这么做可以有效的避免幻读、不可重复读、脏读等问题，但会极大的降低数据库的并发能力。</p>
+<h3 id="一条简单SQL的加锁实现分析"><a href="#一条简单SQL的加锁实现分析" class="headerlink" title="一条简单SQL的加锁实现分析"></a>一条简单SQL的加锁实现分析</h3><p>例子：</p>
+<p>id列是二级非唯一索引，RR隔离级别<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">SQL1：select * from t1 where id = 10;</div><div class="line">SQL2：delete from t1 where id = 10;</div></pre></td></tr></table></figure></p>
+<p>RC隔离级别允许幻读，而RR隔离级别，不允许存在幻读。</p>
+]]></content>
     </entry>
     
     <entry>
