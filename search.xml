@@ -4,6 +4,107 @@
   
     
     <entry>
+      <title><![CDATA[ruby 安装]]></title>
+      <url>http://zsr.github.io/2016/08/25/ruby-%E5%AE%89%E8%A3%85/</url>
+      <content type="html"></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[zookeeper 安装]]></title>
+      <url>http://zsr.github.io/2016/08/24/zookeeper-%E5%AE%89%E8%A3%85/</url>
+      <content type="html"><![CDATA[<h1 id="Zookeeper-安装及配置（Mac）"><a href="#Zookeeper-安装及配置（Mac）" class="headerlink" title="Zookeeper 安装及配置（Mac）"></a>Zookeeper 安装及配置（Mac）</h1><p>Zookeeper 分布式服务框架是 Apache Hadoop 的一个子项目，它主要是用来解决分布式应用中经常遇到的一些数据管理问题，如：统一命名服务、状态同步服务、集群管理、分布式应用配置项的管理等。</p>
+<h3 id="Zookeeper-的安装"><a href="#Zookeeper-的安装" class="headerlink" title="Zookeeper 的安装"></a>Zookeeper 的安装</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">下载地址：http://www.apache.org/dyn/closer.cgi/zookeeper</div></pre></td></tr></table></figure>
+<p>首先从官网下载ZooKeeper压缩包，然后解压下载得到的ZooKeeper压缩包，发现有“bin，conf，lib”等目录。“bin目录”中存放有运行脚本；“conf目录”中存放有配置文件；“lib目录”中存放有运行所需要第三方库。<br>解压文件： </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">tar zxvf zookeeper-3.4.8.tar.gz</div></pre></td></tr></table></figure>
+<h3 id="Zookeeper-的配置"><a href="#Zookeeper-的配置" class="headerlink" title="Zookeeper 的配置"></a>Zookeeper 的配置</h3><h4 id="伪分布式部署"><a href="#伪分布式部署" class="headerlink" title="伪分布式部署"></a>伪分布式部署</h4><ol>
+<li>在“conf”目录下，新建一个名为“zoo.cfg”的文件，准备部署3个节点，其中内容如下：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">   tickTime=2000</div><div class="line">initLimit=5</div><div class="line">syncLimit=2</div><div class="line">dataDir=/Users/nali/program/zookeeper-3.4.8_1/data</div><div class="line">dataLogDir=/Users/nali/program/zookeeper-3.4.8_1/logs </div><div class="line">clientPort=2181(不同节点注意不同)</div><div class="line">server.1=127.0.0.1:2888:3888</div><div class="line">server.2=127.0.0.1:2889:3889</div><div class="line">server.3=127.0.0.1:2890:3890</div></pre></td></tr></table></figure>
+<p><strong>参数说明:</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">#tickTime: 客户端和服务端或者服务端多个节点之间维持心跳的时间间隔，单位毫秒。</div><div class="line"></div><div class="line">#initLimit：zookeeper集群中的包含多台server, 其中一台为leader, 集群中其余的server为follower.</div><div class="line">initLimit参数配置初始化连接时, follower和leader之间的最长心跳时间. 此时该参数设置为5, 说明时间限制为5   倍tickTime, 即5*2000=10000ms=10s.</div><div class="line"></div><div class="line">#syncLimit：该参数配置leader和follower之间发送消息, 请求和应答的最大时间长度. 此时该参数设置为2, 说明时间限制为2倍tickTime, 即4000ms.</div><div class="line"></div><div class="line">#dataDir: 数据文件存放目录,可以是任意目录</div><div class="line"></div><div class="line">#dataLogDir: 用来重做数据的事务日志文件存放目录.</div><div class="line"></div><div class="line">#clientPort: 监听client连接的端口号.</div><div class="line"></div><div class="line">#server.1，server.2，server.3: 表示节点编号，后边用冒号隔开的三个数字，分别表示节点的ip，交换数据的端口号，某个节点挂掉之后专门用来选举的端口号。</div></pre></td></tr></table></figure>
+<font color="red">注：initLimit，syncLimit在单节点部署模式下，不需要配置。</font>
+
+<ol>
+<li>在dataDir目录下创建myid文件，写入该节点的编号 1 。这样一个节点就配置完成了。</li>
+<li>复制 zookeeper-3.4.8-1 到 zookeeper-3.4.8-2和 zookeeper-3.4.8-3，要修改的地方是 zoo.cfg里的 dataDir,dataLogDir,clientPort。还有需要在自己的data目录下新建myid文件，写入自己的编号。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>myid</th>
+<th>Data目录</th>
+<th>Client</th>
+<th>Server</th>
+<th>Leader</th>
+<th>配置文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>/zookeeper-3.4.8_1/data</td>
+<td>2181</td>
+<td>2888</td>
+<td>3888</td>
+<td>z1.cfg</td>
+</tr>
+<tr>
+<td>2</td>
+<td>/zookeeper-3.4.8_2/data</td>
+<td>2182</td>
+<td>2889</td>
+<td>3889</td>
+<td>z2.cfg</td>
+</tr>
+<tr>
+<td>3</td>
+<td>/zookeeper-3.4.8_3/data</td>
+<td>2183</td>
+<td>2890</td>
+<td>3890</td>
+<td>z3.cfg</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>启动和测试</li>
+</ol>
+<p>分别进入三个节点的bin目录，启动zookeeper，运行./zkServer.sh start。</p>
+<p>注：前边节点启动的时候，会抛出一些错误，可忽略。这是因为另外的节点没启动，导致的通信异常。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:program nali$ <span class="built_in">cd</span> zookeeper-3.4.8_3/bin/</div><div class="line">nalideMacBook-Pro-4:bin nali$ ./zkServer.sh start</div><div class="line">ZooKeeper JMX enabled by default</div><div class="line">Using config: /Users/nali/program/zookeeper-3.4.8_3/bin/../conf/zoo.cfg</div><div class="line">Starting zookeeper ... STARTED</div></pre></td></tr></table></figure>
+<p>​       </p>
+<p>可以用自带的基于telnet的客户端测试一下，看看是否启动成功。随便进入一个节点的bin目录，比如节点0</p>
+<p>./zkCli.sh -server 127.0.0.1:2180，随便输入一个字符，他会跳出help界面。说明服务端启动成功。  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">nalideMacBook-Pro-4:bin nali$ ./zkCli.sh -server 127.0.0.1:2181</div><div class="line">Connecting to 127.0.0.1:2181</div><div class="line">2016-08-25 21:02:28,712 [myid:] - INFO  [main:Environment@100] - Client environment:zookeeper.version=3.4.8--1, built on 02/06/2016 03:18 GMT</div><div class="line">2016-08-25 21:02:28,715 [myid:] - INFO  [main:Environment@100] - Client environment:host.name=192.168.120.222</div><div class="line">2016-08-25 21:02:28,715 [myid:] - INFO  [main:Environment@100] - Client environment:java.version=1.8.0_91</div><div class="line">2016-08-25 21:02:28,717 [myid:] - INFO  [main:Environment@100] - Client environment:java.vendor=Oracle Corporation</div><div class="line">2016-08-25 21:02:28,717 [myid:] - INFO  [main:Environment@100] - Client environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre</div><div class="line">2016-08-25 21:02:28,717 [myid:] - INFO  [main:Environment@100] - Client environment:java.class.path=/Users/nali/program/zookeeper-3.4.8_1/bin/../build/classes:/Users/nali/program/zookeeper-3.4.8_1/bin/../build/lib/*.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../lib/slf4j-log4j12-1.6.1.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../lib/slf4j-api-1.6.1.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../lib/netty-3.7.0.Final.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../lib/<span class="built_in">log</span>4j-1.2.16.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../lib/jline-0.9.94.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../zookeeper-3.4.8.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../src/java/lib/*.jar:/Users/nali/program/zookeeper-3.4.8_1/bin/../conf:</div><div class="line">2016-08-25 21:02:28,718 [myid:] - INFO  [main:Environment@100] - Client environment:java.library.path=/Users/nali/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.</div><div class="line">2016-08-25 21:02:28,718 [myid:] - INFO  [main:Environment@100] - Client environment:java.io.tmpdir=/var/folders/jr/rgnrtr4n13n3d6tbwsch9_qr0000gn/T/</div><div class="line">2016-08-25 21:02:28,718 [myid:] - INFO  [main:Environment@100] - Client environment:java.compiler=&lt;NA&gt;</div><div class="line">2016-08-25 21:02:28,718 [myid:] - INFO  [main:Environment@100] - Client environment:os.name=Mac OS X</div><div class="line">2016-08-25 21:02:28,719 [myid:] - INFO  [main:Environment@100] - Client environment:os.arch=x86_64</div><div class="line">2016-08-25 21:02:28,719 [myid:] - INFO  [main:Environment@100] - Client environment:os.version=10.11.4</div><div class="line">2016-08-25 21:02:28,719 [myid:] - INFO  [main:Environment@100] - Client environment:user.name=nali</div><div class="line">2016-08-25 21:02:28,719 [myid:] - INFO  [main:Environment@100] - Client environment:user.home=/Users/nali</div><div class="line">2016-08-25 21:02:28,719 [myid:] - INFO  [main:Environment@100] - Client environment:user.dir=/Users/nali/program/zookeeper-3.4.8_1/bin</div><div class="line">2016-08-25 21:02:28,721 [myid:] - INFO  [main:ZooKeeper@438] - Initiating client connection, connectString=127.0.0.1:2181 sessionTimeout=30000 watcher=org.apache.zookeeper.ZooKeeperMain<span class="variable">$MyWatcher</span>@531d72ca</div><div class="line">Welcome to ZooKeeper!</div></pre></td></tr></table></figure>
+<ol>
+<li>Zookeeper常用命令<ul>
+<li>ZooKeeper服务端命令:<ul>
+<li>启动ZK服务:  bin/zkServer.sh start</li>
+<li>查看ZK服务状态: bin/zkServer.sh status</li>
+<li>停止ZK服务:  bin/zkServer.sh stop</li>
+<li>重启ZK服务:  bin/zkServer.sh restart</li>
+</ul>
+</li>
+<li>zk客户端命令<ul>
+<li>显示根目录下、文件： ls / 使用 ls 命令来查看当前 ZooKeeper 中所包含的内容</li>
+<li>显示根目录下、文件： ls2 / 查看当前节点数据并能看到更新次数等数据</li>
+<li>创建文件，并设置初始内容： create /zk “test” 创建一个新的 znode节点“ zk ”以及与它关联的字符</li>
+<li>获取文件内容： get /zk 确认 znode 是否包含我们所创建的字符串</li>
+<li>修改文件内容： set /zk “zkbak” 对 zk 所关联的字符串进行设置</li>
+<li>删除文件： delete /zk 将刚才创建的 znode 删除</li>
+<li>退出客户端： quit</li>
+<li>帮助命令： help</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>zookeeper仅仅是维护了一个分布式的树形目录。如下图。它通过<a href="http://baike.baidu.com/view/8438269.htm" target="_blank" rel="external">fast paxos算法</a>保证多个节点上znode的数据一致性。一套zookeeper可以同时给多个应用程序使用，只需要隔离好各自的path~。在生产环境中，多个程序，比如hadoop，hbase，strom共用一套zookeeper也是常事。结构如下图。</p>
+<p><img src="http://dl2.iteye.com/upload/attachment/0099/3476/b395cbf0-55aa-387e-af65-b5bcd9fcf234.jpg" alt="img"></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Guava cache]]></title>
       <url>http://zsr.github.io/2016/08/24/Guava-cache/</url>
       <content type="html"><![CDATA[<h1 id="Guava-Cache"><a href="#Guava-Cache" class="headerlink" title="Guava Cache"></a>Guava Cache</h1><p>Guava cache是一个应用内缓存(一般作为应用的本地缓存，redis作为集中式分布式缓存)。</p>
@@ -119,13 +220,10 @@
 </ul>
 <p>推荐使用第二种方法，因为第二种方法可以直接得到Future的返回值，或者处理错误情况。本质上第二种方法是通过调动第一种方法实现的，做了进一步的封装。</p>
 <p>另外ListenableFuture接口还有其他几种内置具体实现：</p>
-<ol>
-<li><p>SettableFuture：不需要实现一个方法来计算返回值，而只需要返回一个固定值来做为返回值，可以通过程序设置此Future的返回值或者异常信息</p>
-</li>
-<li><p>CheckedFuture： 这是一个继承自ListenableFuture接口，他提供了checkedGet()方法，此方法在Future执行发生异常时，可以抛出指定类型的异常。</p>
-<p>​</p>
-</li>
-</ol>
+<ul>
+<li>SettableFuture：不需要实现一个方法来计算返回值，而只需要返回一个固定值来做为返回值，可以通过程序设置此Future的返回值或者异常信息</li>
+<li>CheckedFuture： 这是一个继承自ListenableFuture接口，他提供了checkedGet()方法，此方法在Future执行发生异常时，可以抛出指定类型的异常。</li>
+</ul>
 <p>可以在callable内部捕获异常，也可以抛出，在回调的onFailure中处理异常。</p>
 <p>上面演示的是对JDK普通的线程池，当然也可以对时间调度的线程池进行装饰。示例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * 演示定时调度线程池装饰成listen的效果</div><div class="line"> *</div><div class="line"> * <span class="doctag">@throws</span> InterruptedException</div><div class="line"> */</div><div class="line"><span class="meta">@Test</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test2</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</div><div class="line">    ListeningScheduledExecutorService listeningScheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(<span class="number">3</span>));</div><div class="line">    <span class="comment">//只有callable才对应有future</span></div><div class="line">    ListenableScheduledFuture&lt;?&gt; listenableScheduledFuture = listeningScheduledExecutorService.scheduleAtFixedRate(<span class="keyword">new</span> Runnable() &#123;</div><div class="line">        <span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">            System.out.println(<span class="string">"hello world"</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;, <span class="number">5</span>, <span class="number">3</span>, TimeUnit.SECONDS);</div><div class="line"></div><div class="line">    <span class="comment">//因为上面的传的是runnable，所以没有返回值，没有返回值就不会触发future的callBack</span></div><div class="line">    Futures.addCallback(listenableScheduledFuture, <span class="keyword">new</span> FutureCallback&lt;Object&gt;() &#123;</div><div class="line">        <span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSuccess</span><span class="params">(Object result)</span> </span>&#123;</div><div class="line">            System.out.println(<span class="string">"not result: "</span> + result);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Throwable t)</span> </span>&#123;</div><div class="line">        &#125;</div><div class="line">    &#125;);</div><div class="line"></div><div class="line">    Thread.sleep(<span class="number">12000</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
