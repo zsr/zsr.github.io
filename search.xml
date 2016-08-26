@@ -19,7 +19,6 @@
 <li>真实对象的某些行为很难被触发 </li>
 <li>真实对象实际上还不存在的（和其他开发小组或者和新的硬件打交道）等等</li>
 </ul>
-<h3 id="Mock-对象测试的关键步骤"><a href="#Mock-对象测试的关键步骤" class="headerlink" title="Mock 对象测试的关键步骤"></a>Mock 对象测试的关键步骤</h3><p>使用一个接口来描述这个对象 在产品代码中实现这个接口 在测试代码中实现这个接口 在被测试代码中只是通过接口来引用对象，所以它不知道这个引用的对象是真实对象,还是 Mock 对象。</p>
 <h3 id="Mockito-使用"><a href="#Mockito-使用" class="headerlink" title="Mockito 使用"></a>Mockito 使用</h3><h4 id="声明-mockito-依赖"><a href="#声明-mockito-依赖" class="headerlink" title="声明 mockito 依赖"></a>声明 mockito 依赖</h4><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;dependency&gt;</div><div class="line">    &lt;groupId&gt;org.mockito&lt;/groupId&gt;</div><div class="line">    &lt;artifactId&gt;mockito-core&lt;/artifactId&gt;</div><div class="line">    &lt;version&gt;2.0.111-beta&lt;/version&gt;</div><div class="line">&lt;/dependency&gt;</div></pre></td></tr></table></figure>
 <h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><ol>
 <li><p>验证行为</p>
