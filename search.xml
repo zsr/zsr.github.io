@@ -4,6 +4,29 @@
   
     
     <entry>
+      <title><![CDATA[<mvc:annotation-driven />]]></title>
+      <url>http://zsr.github.io/2016/09/13/mvc-annotation-driven/</url>
+      <content type="html"><![CDATA[<p><strong>这个标签注册了Spring MVC分发请求到Controller控制器所必须的HandlerMapping和HandlerAdapter实例。</strong></p>
+<p><strong>Spring 3.1 之前:</strong></p>
+<ol>
+<li>DefaultAnnotationHandlerMapping</li>
+<li>AnnotationMethodHandlerAdapter</li>
+<li>AnnotationMethodHandlerExceptionResolver</li>
+</ol>
+<p><strong>Spring 3.1+ ：</strong></p>
+<ol>
+<li>RequestMappingHandlerMapping</li>
+<li>RequestMappingHandlerAdapter</li>
+<li>ExceptionHandlerExceptionResolver  </li>
+</ol>
+<p>DefaultAnnotationHandlerMapping 根据url决定使用哪个controller，AnnotationMethodHandlerAdapter 选择处理请求的实际方法。RequestMappingHandlerMapping包涵上面2个作用，所以将请求直接映射到方法。</p>
+<p>参考：</p>
+<p><a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html" target="_blank" rel="external">http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html</a></p>
+<p><a href="http://shouce.jb51.net/spring/mvc.html" target="_blank" rel="external">http://shouce.jb51.net/spring/mvc.html</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Spring MVC 适配器模式]]></title>
       <url>http://zsr.github.io/2016/09/13/Spring-MVC-%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F/</url>
       <content type="html"><![CDATA[<pre><code>找到DispatcherServlet类中的`doDispatch`体，我们可以看到，它的作用是相当于在Servlet的 doService调用的。 也就是用来传递request给我们编写的Controller并执行相应的方法、返回ModeView对象。 
