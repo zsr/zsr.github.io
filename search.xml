@@ -4,9 +4,9 @@
   
     
     <entry>
-      <title><![CDATA[<mvc:annotation-driven />]]></title>
+      <title><![CDATA[mvc:annotation-driven]]></title>
       <url>http://zsr.github.io/2016/09/13/mvc-annotation-driven/</url>
-      <content type="html"><![CDATA[<p><strong>这个标签注册了Spring MVC分发请求到Controller控制器所必须的HandlerMapping和HandlerAdapter实例。</strong></p>
+      <content type="html"><![CDATA[<p><strong><code>&lt;mvc:annotation-driven /&gt;</code>这个标签注册了Spring MVC分发请求到Controller控制器所必须的HandlerMapping和HandlerAdapter实例。</strong></p>
 <p><strong>Spring 3.1 之前:</strong></p>
 <ol>
 <li>DefaultAnnotationHandlerMapping</li>
