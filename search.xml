@@ -19,7 +19,7 @@
 <li>RequestMappingHandlerAdapter</li>
 <li>ExceptionHandlerExceptionResolver  </li>
 </ol>
-<p>DefaultAnnotationHandlerMapping 根据url决定使用哪个controller，AnnotationMethodHandlerAdapter 选择处理请求的实际方法。RequestMappingHandlerMapping包涵上面2个作用，所以将请求直接映射到方法。</p>
+<p><code>DefaultAnnotationHandlerMapping</code> 根据url决定使用哪个controller，<code>AnnotationMethodHandlerAdapter</code> 选择处理请求的实际方法。<code>RequestMappingHandlerMapping</code>包涵上面2个作用，所以将请求直接映射到方法。</p>
 <p>参考：</p>
 <p><a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html" target="_blank" rel="external">http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html</a></p>
 <p><a href="http://shouce.jb51.net/spring/mvc.html" target="_blank" rel="external">http://shouce.jb51.net/spring/mvc.html</a></p>
