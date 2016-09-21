@@ -4,6 +4,30 @@
   
     
     <entry>
+      <title><![CDATA[Spring的@Autowired注入规则]]></title>
+      <url>http://zsr.github.io/2016/09/21/spring-Autowired/</url>
+      <content type="html"><![CDATA[<p>Spring 2.5引入了<code>@Autowired</code>注解，它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。通过<code>@Autowired</code>的使用来消除set，get方法。</p>
+<p><code>@Autowired</code>默认是按照byType进行注入的，但是当byType方式找到了多个符合的bean，又是怎么处理的？</p>
+<p><strong>Autowired默认先按byType，如果发现找到多个bean，则，又按照byName方式比对，如果还有多个，则报出异常</strong>。</p>
+<p>例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Autowired</span></div><div class="line"><span class="keyword">private</span> ExamUserMapper examUserMapper;  - ExamUserMapper是一个接口</div></pre></td></tr></table></figure>
+<ul>
+<li>spring先找类型为ExamUserMapper的bean</li>
+<li>如果存在且唯一，则OK；</li>
+<li>如果不唯一，在结果集里，寻找name为examUserMapper的bean。因为bean的name有唯一性，所以，到这里应该能确定是否存在满足要求的bean了</li>
+</ul>
+<p><code>@Autowired也可以手动指定按照byName方式注入，使用@Qualifier标签，例如：</code></p>
+<p><code>@Autowired</code></p>
+<p><code>@Qualifier</code> <code>(</code> <code>&quot;baseDao&quot;</code> <code>)</code></p>
+<p>因为bean的name具有唯一性，理论上是byName会快一点，但spring默认使用byType的方式注入</p>
+<p>要使用@Autowired实现要精简程序的目的，需要这样来处理： </p>
+<p>在applicationContext.xml中加入： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;!-- 该 BeanPostProcessor 将自动对标注 <span class="meta">@Autowired</span> 的 Bean 进行注入 --&gt;   </div><div class="line">&lt;bean <span class="class"><span class="keyword">class</span></span>=<span class="string">"org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"</span>/&gt;</div></pre></td></tr></table></figure>
+<p>Spring通过一个BeanPostProcessor对@Autowired进行解析，所以要让@Autowired起作用必须事先在Spring容器中声明<code>AutowiredAnnotationBeanPostProcessor</code> Bean。   </p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Comparable 和 Comparator比较]]></title>
       <url>http://zsr.github.io/2016/09/20/Comparable%E5%92%8CComparator%E6%AF%94%E8%BE%83/</url>
       <content type="html"><![CDATA[<p>有两种方式可以进行集合排序 ：</p>
