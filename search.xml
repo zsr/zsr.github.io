@@ -4,7 +4,7 @@
   
     
     <entry>
-      <title><![CDATA[<context:annotation-config/>与<context:component-scan/>区别]]></title>
+      <title><![CDATA[context:annotation-config 与 context:component-scan区别]]></title>
       <url>http://zsr.github.io/2016/09/21/context-annotation-config%E4%B8%8Econtext-component-scan%E5%8C%BA%E5%88%AB/</url>
       <content type="html"><![CDATA[<p><code>&lt;context:annotation-config&gt;</code> <strong>是用于激活那些已经在spring容器里注册过的bean</strong>（无论是通过xml的方式还是通过package sanning的方式）上面的注解。</p>
 <p><code>&lt;context:component-scan&gt;</code>除了具有<code>&lt;context:annotation-config&gt;</code>的功能之外，<code>&lt;context:component-scan&gt;</code>还可以在指定的package下扫描以及注册javabean 。</p>
