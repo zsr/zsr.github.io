@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title><![CDATA[context:annotation-config 作用]]></title>
+      <url>http://zsr.github.io/2016/09/21/context-annotation-config-%E4%BD%9C%E7%94%A8/</url>
+      <content type="html"><![CDATA[<p>在基于注解方式配置Spring的配置文件中，可能会见到<code>&lt;context:annotation-config/&gt;</code>这样一条配置，他的作用是隐式地向 Spring 容器注册</p>
+<ul>
+<li>AutowiredAnnotationBeanPostProcessor</li>
+<li>CommonAnnotationBeanPostProcessor</li>
+<li>PersistenceAnnotationBeanPostProcessor</li>
+<li>RequiredAnnotationBeanPostProcessor 这 4 个BeanPostProcessor。</li>
+</ul>
+<p>注册这4个BeanPostProcessor的作用，就是为了你的系统能够识别相应的注解。</p>
+<p>例如：</p>
+<ol>
+<li>如果你想使用<code>@Autowired</code>注解，那么就必须事先在 Spring 容器中声明 <code>AutowiredAnnotationBeanPostProcessor</code>Bean。传统声明方式如下</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;bean <span class="class"><span class="keyword">class</span></span>=<span class="string">"org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor "</span>/&gt;</div></pre></td></tr></table></figure>
+<ol>
+<li>如果想使用@ Resource 、@ PostConstruct、@ PreDestroy等注解就必须声明CommonAnnotationBeanPostProcessor</li>
+<li>如果想使用@PersistenceContext注解，就必须声明PersistenceAnnotationBeanPostProcessor的Bean。</li>
+<li>如果想使用 @Required的注解，就必须声明RequiredAnnotationBeanPostProcessor的Bean。同样，传统的声明方式如下：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;bean <span class="class"><span class="keyword">class</span></span>=<span class="string">"org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor"</span>/&gt;</div></pre></td></tr></table></figure>
+<p>一般来说，这些注解我们还是比较常用，尤其是<code>@Autowired</code>的注解，在自动注入的时候更是经常使用，所以如果总是需要按照传统的方式一条一条配置显得有些繁琐和没有必要，于是spring给我们提供<code>&lt;context:annotation-config/&gt;</code>的简化配置方式，自动帮你完成声明。</p>
+<p>不过，我们使用注解一般都会配置扫描包路径选项</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;context:component-scan base-<span class="keyword">package</span>=<span class="string">"XX.XX"</span>/&gt;</div></pre></td></tr></table></figure>
+<p>该配置项其实也包含了自动注入上述processor的功能，因此当使用<code>&lt;context:component-scan/&gt;</code>后，就可以将 <code>&lt;context:annotation-config/&gt;</code>移除了。</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Spring的@Autowired注入规则]]></title>
       <url>http://zsr.github.io/2016/09/21/spring-Autowired/</url>
       <content type="html"><![CDATA[<p>Spring 2.5引入了<code>@Autowired</code>注解，它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。通过<code>@Autowired</code>的使用来消除set，get方法。</p>
@@ -17,8 +46,7 @@
 <li>如果不唯一，在结果集里，寻找name为examUserMapper的bean。因为bean的name有唯一性，所以，到这里应该能确定是否存在满足要求的bean了</li>
 </ul>
 <p><code>@Autowired也可以手动指定按照byName方式注入，使用@Qualifier标签，例如：</code></p>
-<p><code>@Autowired</code></p>
-<p><code>@Qualifier</code> <code>(</code> <code>&quot;baseDao&quot;</code> <code>)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Autowired</span></div><div class="line"><span class="meta">@Qualifier</span> ( <span class="string">"baseDao"</span> )</div></pre></td></tr></table></figure>
 <p>因为bean的name具有唯一性，理论上是byName会快一点，但spring默认使用byType的方式注入</p>
 <p>要使用@Autowired实现要精简程序的目的，需要这样来处理： </p>
 <p>在applicationContext.xml中加入： </p>
