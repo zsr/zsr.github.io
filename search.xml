@@ -4,6 +4,38 @@
   
     
     <entry>
+      <title><![CDATA[mysql 存储引擎]]></title>
+      <url>http://zsr.github.io/2016/09/27/mysql-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/</url>
+      <content type="html"><![CDATA[<h3 id="什么是存储引擎？"><a href="#什么是存储引擎？" class="headerlink" title="什么是存储引擎？"></a><strong>什么是存储引擎？</strong></h3><p>存储引擎说白了就是如何存储数据、如何为存储的数据建立索引和如何更新、查询数据等技术的实现方法。因为在关系数据库中数据的存储是以表的形式存储的，所以存储引擎也可以称为表类型（即存储和操作此表的类型）。</p>
+<p>关系数据库表是用于存储和组织信息的数据结构，可以将表理解为由行和列组成的表格，类似于Excel的电子表格的形式。有的表简单，有的表复杂，有的表根本不用来存储任何长期的数据，有的表读取时非常快，但是插入数据时去很差；而我们在实际开发过程中，就可能需要各种各样的表，不同的表，就意味着存储不同类型的数据，数据的处理上也会存在着差异，那么。对于MySQL来说，它提供了很多种类型的存储引擎，我们可以根据对数据处理的需求，选择不同的存储引擎，从而最大限度的利用MySQL强大的功能。</p>
+<h3 id="MyISAM存储引擎"><a href="#MyISAM存储引擎" class="headerlink" title="MyISAM存储引擎"></a><strong>MyISAM存储引擎</strong></h3><p>在mysql客户端中，使用以下命令可以查看MySQL支持的引擎。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">show engines;</div></pre></td></tr></table></figure>
+<p>MyISAM表是独立于操作系统的，这说明可以轻松地将其从Windows服务器移植到Linux服务器；每当我们建立一个MyISAM引擎的表时，就会在本地磁盘上建立三个文件，文件名就是表名。例如，我建立了一个MyISAM引擎的tb_Demo表，那么就会生成以下三个文件：</p>
+<ul>
+<li>tb_demo.frm，存储表定义；</li>
+<li>tb_demo.MYD，存储数据；</li>
+<li>tb_demo.MYI，存储索引。</li>
+</ul>
+<p>MyISAM表无法处理事务，这就意味着有事务处理需求的表，不能使用MyISAM存储引擎。MyISAM存储引擎特别适合在以下几种情况下使用：</p>
+<ul>
+<li>选择密集型的表。MyISAM存储引擎在筛选大量数据时非常迅速，这是它最突出的优点。</li>
+<li>插入密集型的表。MyISAM的并发插入特性允许同时选择和插入数据。例如：MyISAM存储引擎很适合管理邮件或Web服务器日志数据。</li>
+</ul>
+<h3 id="InnoDB存储引擎"><a href="#InnoDB存储引擎" class="headerlink" title="InnoDB存储引擎"></a><strong>InnoDB存储引擎</strong></h3><p>InnoDB给Mysql的表提供了 事务、回滚、崩溃修复能力、多版本并发控制的事务安全、间隙锁（可以有效的防止幻读的出现）、支持辅助索引、聚簇索引、自适应hash索引、支持热备、行级锁。还有InnoDB是Mysql上唯一一个提供了外键约束的引擎。</p>
+<p>InnoDB存储引擎中，创建的表的表结构是单独存储的并且存储在.frm文件中。数据和索引存储在一起的并且存储在表空间中。但是默认情况下mysql会将数据库的所有InnoDB表存储在一个表空间中的。</p>
+<p>InnoDB是一个健壮的事务型存储引擎，目前<strong>InnoDB就是作为默认的存储引擎</strong>。InnoDB还引入了行级锁定和外键约束，在以下场合下，使用InnoDB是最理想的选择：</p>
+<ol>
+<li>更新密集的表。InnoDB存储引擎特别适合处理多重并发的更新请求。</li>
+<li>事务。InnoDB存储引擎是支持事务的标准MySQL存储引擎。</li>
+<li>自动灾难恢复。与其它存储引擎不同，InnoDB表能够自动从灾难中恢复。</li>
+<li>外键约束。MySQL支持外键的存储引擎只有InnoDB。</li>
+<li>支持自动增加列AUTO_INCREMENT属性。</li>
+</ol>
+<p>一般来说，如果需要事务支持，并且有较高的并发读取频率，InnoDB是不错的选择。</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[context:annotation-config 与 context:component-scan区别]]></title>
       <url>http://zsr.github.io/2016/09/21/context-annotation-config%E4%B8%8Econtext-component-scan%E5%8C%BA%E5%88%AB/</url>
       <content type="html"><![CDATA[<p><code>&lt;context:annotation-config&gt;</code> <strong>是用于激活那些已经在spring容器里注册过的bean</strong>（无论是通过xml的方式还是通过package sanning的方式）上面的注解。</p>
