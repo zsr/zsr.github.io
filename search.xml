@@ -23,7 +23,7 @@
 </ul>
 <h3 id="InnoDB存储引擎"><a href="#InnoDB存储引擎" class="headerlink" title="InnoDB存储引擎"></a><strong>InnoDB存储引擎</strong></h3><p>InnoDB给Mysql的表提供了 事务、回滚、崩溃修复能力、多版本并发控制的事务安全、间隙锁（可以有效的防止幻读的出现）、支持辅助索引、聚簇索引、自适应hash索引、支持热备、行级锁。还有InnoDB是Mysql上唯一一个提供了外键约束的引擎。</p>
 <p>InnoDB存储引擎中，创建的表的表结构是单独存储的并且存储在.frm文件中。数据和索引存储在一起的并且存储在表空间中。但是默认情况下mysql会将数据库的所有InnoDB表存储在一个表空间中的。</p>
-<p>InnoDB是一个健壮的事务型存储引擎，目前<strong>InnoDB就是作为默认的存储引擎</strong>。InnoDB还引入了行级锁定和外键约束，在以下场合下，使用InnoDB是最理想的选择：</p>
+<p>InnoDB是一个健壮的事务型存储引擎，<strong>mysql 5.5 之后。InnoDB 被认定为默认的存储引擎</strong>. InnoDB就是作为默认的存储引擎**。InnoDB还引入了行级锁定和外键约束，在以下场合下，使用InnoDB是最理想的选择：</p>
 <ol>
 <li>更新密集的表。InnoDB存储引擎特别适合处理多重并发的更新请求。</li>
 <li>事务。InnoDB存储引擎是支持事务的标准MySQL存储引擎。</li>
