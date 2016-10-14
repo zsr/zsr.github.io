@@ -4,6 +4,50 @@
   
     
     <entry>
+      <title><![CDATA[mvc:interceptors]]></title>
+      <url>http://zsr.github.io/2016/10/14/mvc-interceptors/</url>
+      <content type="html"><![CDATA[<h3 id="一-spring-MVC-Interceptor-作用"><a href="#一-spring-MVC-Interceptor-作用" class="headerlink" title="一. spring MVC Interceptor 作用:"></a><strong>一. spring MVC Interceptor 作用:</strong></h3><p>Spring MVC框架中的Interceptor，与Servlet API中的Filter十分类似，用于对Web请求进行预处理/后处理。通常情况下这些预处理/后处理逻辑是通用的，可以被应用于所有或多个Web请求，例如：</p>
+<ul>
+<li>记录Web请求相关日志，可以用于做一些信息监控、统计、分析</li>
+<li>检查Web请求访问权限，例如发现用户没有登录后，重定向到登录页面</li>
+<li>打开/关闭数据库连接——预处理时打开，后处理关闭，可以避免在所有业务方法中都编写类似代码，也不会忘记关闭数据库连接</li>
+</ul>
+<h3 id="二-拦截器和过滤器filter的区别："><a href="#二-拦截器和过滤器filter的区别：" class="headerlink" title="二. 拦截器和过滤器filter的区别："></a><strong>二. 拦截器和过滤器filter的区别：</strong></h3><ol>
+<li>Filter是Servlet规范规定的，只能用于web<a href="http://www.xuebuyuan.com/" target="_blank" rel="external">程序</a>中。而拦截器既可以用于web程序，也可以用于Application、Swing程序中。</li>
+</ol>
+<ol>
+<li>Filter是在Servlet规范中定义的，是Servlet容器支持的。而拦截器是在Spring容器中的，是Spring框架支持的。</li>
+<li>同其他代码块一样，拦截器也是一个Spring的组件，归Spring管理，配置在Spring文件中，因此能使用Spring里的任何资源、对象，例如Service对象、数据源、事务管理等，通过IoC注入到拦截器即可；而Filter则不能</li>
+<li>Filter只在Servlet前后起作用。而拦截器能够深入得到方法前后、异常抛出前后等，因为拦截器的使用具有更大的弹性。所以在Spring构架的程序中，要优先使用拦截器。</li>
+</ol>
+<h3 id="三-Spring-MVC请求处理流程"><a href="#三-Spring-MVC请求处理流程" class="headerlink" title="三. Spring MVC请求处理流程"></a><strong>三. Spring MVC请求处理流程</strong></h3><p><a href="http://assets.tianmaying.com/md-image/97936b6d48e3c678ade5e7307eeb54ba" target="_blank" rel="external"><img src="http://assets.tianmaying.com/md-image/97936b6d48e3c678ade5e7307eeb54ba" alt="alter-text"></a></p>
+<p>上图是Spring MVC框架处理Web请求的基本流程，请求会经过<code>DispatcherServlet</code>的分发后，会按顺序经过一系列的<code>Interceptor</code>并执行其中的预处理方法(preHandle)，在请求返回时同样会执行其中的后处理方法(postHandle)。</p>
+<h3 id="四-拦截器接口-HandlerInterceptor"><a href="#四-拦截器接口-HandlerInterceptor" class="headerlink" title="四. 拦截器接口-HandlerInterceptor"></a><strong>四. 拦截器接口-HandlerInterceptor</strong></h3><p>Spring MVC中拦截器是实现了<code>HandlerInterceptor</code>接口的Bean：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HandlerInterceptor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">preHandle</span><span class="params">(HttpServletRequest request, </span></span></div><div class="line">                      HttpServletResponse response, </div><div class="line">                      Object handler) <span class="keyword">throws</span> Exception;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">postHandle</span><span class="params">(HttpServletRequest request, </span></span></div><div class="line">                    HttpServletResponse response, </div><div class="line">                    Object handler, ModelAndView modelAndView) <span class="keyword">throws</span> Exception;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">afterCompletion</span><span class="params">(HttpServletRequest request, </span></span></div><div class="line">                         HttpServletResponse response, </div><div class="line">                         Object handler, Exception ex) <span class="keyword">throws</span> Exception;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>HandlerInterceptor</code> 接口中定义了三个方法，就是通过这三个方法来对用户的请求进行拦截处理的。</p>
+<ul>
+<li>(1). preHandle (HttpServletRequest request, HttpServletResponse response, Object handle) 方法。<strong>该方法将在请求处理之前进行调用</strong>。SpringMVC 中的Interceptor 是链式的调用的，在一个应用中或者说是在一个请求中可以同时存在多个Interceptor 。每个Interceptor 的调用会依据它的声明顺序依次执行，而且最先执行的都是Interceptor 中的preHandle 方法，所以可以在这个方法中进行一些前置初始化操作或者是对当前请求的一个预处理，也可以在这个方法中进行一些判断来决定请求是否要继续进行下去。该方法的返回值是布尔值Boolean 类型的，当它返回为false 时，表示请求结束，后续的Interceptor 和Controller 都不会再执行；当返回值为true 时就会继续调用下一个Interceptor 的preHandle 方法，如果已经是最后一个Interceptor 的时候就会是调用当前请求的Controller 方法。</li>
+</ul>
+<ul>
+<li>(2). postHandle (HttpServletRequest request, HttpServletResponse response, Object handle, ModelAndView modelAndView) 方法，由preHandle 方法的解释我们知道这个方法包括后面要说到的afterCompletion 方法都只能是在当前所属的Interceptor 的preHandle 方法的返回值为true 时才能被调用。<strong>postHandle 方法，顾名思义就是在当前请求进行处理之后，也就是Controller 方法调用之后执行，但是它会在DispatcherServlet 进行视图返回渲染之前被调用，所以我们可以在这个方法中对Controller 处理之后的ModelAndView 对象进行操作</strong>。postHandle 方法被调用的方向跟preHandle 是相反的，也就是说先声明的Interceptor 的postHandle 方法反而会后执行，这和Struts2 里面的Interceptor 的执行过程有点类型。Struts2 里面的Interceptor 的执行过程也是链式的，只是在Struts2 里面需要手动调用ActionInvocation 的invoke 方法来触发对下一个Interceptor 或者是Action 的调用，然后每一个Interceptor 中在invoke 方法调用之前的内容都是按照声明顺序执行的，而invoke 方法之后的内容就是反向的。</li>
+<li>(3). afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handle, Exception ex) 方法，该方法也是需要当前对应的Interceptor 的preHandle 方法的返回值为true 时才会执行。顾名思义，<strong>该方法将在整个请求结束之后，也就是在DispatcherServlet 渲染了对应的视图之后执行</strong>。这个方法的主要作用是用于进行资源清理工作的。 我们的系统日志的拦截在这个方法中，可以记录日志的相关的参数，检测方法的执行。</li>
+</ul>
+<h3 id="五-拦截器配置"><a href="#五-拦截器配置" class="headerlink" title="五. 拦截器配置"></a><strong>五. 拦截器配置</strong></h3><ul>
+<li><p><strong><code>DefaultAnnotationHandlerMapping</code></strong></p>
+<p>自定义的拦截器可以通过DefaultAnnotationHandlerMapping注入到spring框架中。</p>
+<p>可以打开org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping，可以看到具体的注入细节。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!-- 通过DefaultAnnotationHandlerMapping将拦截器注入 --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">bean</span>           <span class="attr">class</span>=<span class="string">"org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"interceptors"</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="name">list</span>&gt;</span></div><div class="line">			<span class="comment">&lt;!-- 这边可以实现多个拦截器 --&gt;</span></div><div class="line">			<span class="tag">&lt;<span class="name">ref</span> <span class="attr">bean</span>=<span class="string">"DefaultInterceptor"</span>  /&gt;</span></div><div class="line">		<span class="tag">&lt;/<span class="name">list</span>&gt;</span></div><div class="line">	<span class="tag">&lt;/<span class="name">property</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line"><span class="comment">&lt;!-- 自定义的default的拦截器 --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"DefaultInterceptor"</span> <span class="attr">class</span>=<span class="string">"com.xxx.test.DefaultInterceptor"</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>通过 <code>&lt;mvc:interceptors&gt;</code> 的方式配置：</strong></p>
+<p>Spring MVC interceptor一般配置这种模式。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">mvc:interceptors</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">mvc:interceptor</span>&gt;</span></div><div class="line">    	<span class="tag">&lt;<span class="name">mvc:mapping</span> <span class="attr">path</span>=<span class="string">"/api/time/get_time/"</span> /&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"com.xxx.test.DefaultInterceptor"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">mvc:interceptor</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">mvc:interceptors</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>​</p>
+</li>
+</ul>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[SSL/TLS协议运行机制]]></title>
       <url>http://zsr.github.io/2016/10/14/SSL-TLS%E5%8D%8F%E8%AE%AE%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6/</url>
       <content type="html"><![CDATA[<p>互联网的通信安全，建立在SSL/TLS协议之上。</p>
