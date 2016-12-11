@@ -3249,7 +3249,7 @@
     </entry>
     
     <entry>
-      <title><![CDATA[Redis 持久化]]></title>
+      <title><![CDATA[Redis持久化]]></title>
       <url>http://zsr.github.io/2016/08/16/redis-%E6%8C%81%E4%B9%85%E5%8C%96/</url>
       <content type="html"><![CDATA[<h1 id="Redis的持久化"><a href="#Redis的持久化" class="headerlink" title="Redis的持久化"></a>Redis的持久化</h1><p>Redis有两种持久化的方式：快照（RDB文件）和追加式文件（AOF文件）：</p>
 <ul>
