@@ -132,14 +132,14 @@
 <p>在 Quartz 中， scheduler 由 scheduler 工厂创建：<code>DirectSchedulerFactory</code> 或者 <code>StdSchedulerFactory</code>。 第二种工厂 StdSchedulerFactory 使用较多，因为 DirectSchedulerFactory 使用起来不够方便，需要作许多详细的手工编码设置。 Scheduler 主要有三种：<code>RemoteMBeanScheduler</code>， <code>RemoteScheduler</code> 和 <code>StdScheduler</code>。以最常用的 <code>StdScheduler</code> 为例讲解。</p>
 <p>Quartz 核心元素之间的关系如下图所示：</p>
 <p>图 1. Quartz 核心元素关系图</p>
-<p><img src="https://static.oschina.net/uploads/img/201612/08195538_gUkq.gif" alt="图 1. Quartz 核心元素关系图"></p>
+<p><img src="/images/quartz 图2-1.gif"></p>
 <p><strong>线程视图</strong></p>
 <p>在 Quartz 中，有两类线程，<code>Scheduler</code> 调度线程和任务执行线程，其中任务执行线程通常使用一个线程池维护一组线程。</p>
 <p>图 2. Quartz 线程视图</p>
-<p><img src="https://static.oschina.net/uploads/img/201612/08195538_bckV.gif" alt="图 2. Quartz 线程视图"></p>
+<p><img src="/images/quartz 图2-2.gif"></p>
 <p>Scheduler 调度线程主要有两个： 执行常规调度的线程，和执行 misfired trigger 的线程。常规调度线程轮询存储的所有 trigger，如果有需要触发的 trigger，即到达了下一次触发的时间，则从任务执行线程池获取一个空闲线程，执行与该 trigger 关联的任务。Misfire 线程是扫描所有的 trigger，查看是否有 misfired trigger，如果有的话根据 misfire 的策略分别处理。下图描述了这两个线程的基本流程：</p>
 <p>图 3. Quartz 调度线程流程图</p>
-<p><img src="https://static.oschina.net/uploads/img/201612/08195538_6jwQ.png" alt="图 3. Quartz 调度线程流程图"></p>
+<p><img src="/images/quartz 图2-3.gif"></p>
 <p>图 4. Quartz 调度执行时序图</p>
 <p><img src="http://p.blog.csdn.net/images/p_blog_csdn_net/cutesource/EntryImages/20091208/quartz1.jpg" alt="img"></p>
 <h3 id="2-2-quartz源码分析"><a href="#2-2-quartz源码分析" class="headerlink" title="2.2 quartz源码分析"></a>2.2 quartz源码分析</h3><ul>
