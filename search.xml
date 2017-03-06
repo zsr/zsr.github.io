@@ -139,7 +139,7 @@
 <p><img src="/images/quartz 图2-2.gif"></p>
 <p>Scheduler 调度线程主要有两个： 执行常规调度的线程，和执行 misfired trigger 的线程。常规调度线程轮询存储的所有 trigger，如果有需要触发的 trigger，即到达了下一次触发的时间，则从任务执行线程池获取一个空闲线程，执行与该 trigger 关联的任务。Misfire 线程是扫描所有的 trigger，查看是否有 misfired trigger，如果有的话根据 misfire 的策略分别处理。下图描述了这两个线程的基本流程：</p>
 <p>图 3. Quartz 调度线程流程图</p>
-<p><img src="/images/quartz 图2-3.gif"></p>
+<p><img src="/images/quartz 图2-3.png"></p>
 <p>图 4. Quartz 调度执行时序图</p>
 <p><img src="http://p.blog.csdn.net/images/p_blog_csdn_net/cutesource/EntryImages/20091208/quartz1.jpg" alt="img"></p>
 <h3 id="2-2-quartz源码分析"><a href="#2-2-quartz源码分析" class="headerlink" title="2.2 quartz源码分析"></a>2.2 quartz源码分析</h3><ul>
