@@ -4,6 +4,60 @@
   
     
     <entry>
+      <title><![CDATA[Spring MVC 应用上下文]]></title>
+      <url>http://zsr.github.io/2017/05/08/Spring-MVC-%E5%BA%94%E7%94%A8%E4%B8%8A%E4%B8%8B%E6%96%87/</url>
+      <content type="html"><![CDATA[<p>先看上文：<a href="https://zsr.github.io/2016/08/16/ApplicationContext/">Spring MVC ApplicationContext</a></p>
+<h3 id="ServletContext"><a href="#ServletContext" class="headerlink" title="ServletContext"></a>ServletContext</h3><p><code>javaee</code>标准规定了，<code>servlet</code>容器需要在应用项目启动时，给应用项目初始化一个<code>ServletContext</code>作为公共环境容器存放公共信息。<code>ServletContext</code>中的信息都是由容器提供的。</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>通过自定义<code>contextListener</code>获取<code>web.xml</code>中配置的参数</p>
+<ol>
+<li>容器启动时，找到配置文件中的<code>context-param</code>作为键值对放到<code>ServletContext</code>中</li>
+<li>然后找到<code>listener</code>，容器调用它的<code>contextInitialized(ServletContextEvent event)</code>方法，执行其中的操作</li>
+</ol>
+<p>例如：在web.xml中配置</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>key<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>hello<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span> </div><div class="line">   <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.zsr.contextlistener.listener.ContextListenerTest<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>配置好之后，在该类中获取对应的参数信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.contextlistener.listener;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContextEvent;</div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContextListener;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ContextListenerTest</span> <span class="keyword">implements</span> <span class="title">ServletContextListener</span> </span>&#123;</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextDestroyed</span><span class="params">(ServletContextEvent event)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"*************destroy ContextListener*************"</span>);</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unused"</span>)</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextInitialized</span><span class="params">(ServletContextEvent event)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"*************init ContextListener*************"</span>);</div><div class="line">        ServletContext servletContext = event.getServletContext();</div><div class="line">        System.out.println(<span class="string">"key:"</span>+servletContext.getInitParameter(<span class="string">"key"</span>));</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h4><p>　　<strong><code>web.xml</code>在<code>&lt;context-param&gt;&lt;/context-param&gt;</code>标签中声明<code>应用范围内</code>的初始化参数</strong></p>
+<ol>
+<li>启动一个WEB项目的时候,容器(如:<code>Tomcat</code>)会去读它的配置文件<code>web.xml</code>.读两个节点: <code>&lt;listener&gt;&lt;/listener&gt;</code>和 <code>&lt;context-param&gt;&lt;/context-param&gt;</code></li>
+<li>紧接着,容器创建一个<code>ServletContext</code>(上下文)。在该应用内全局共享。</li>
+<li>容器将<code>&lt;context-param&gt;&lt;/context-param&gt;</code>转化为键值对,并交给<code>ServletContext</code>.</li>
+<li>容器创建<code>&lt;listener&gt;&lt;/listener&gt;</code>中的类实例,即创建监听.该监听器必须实现自<strong><code>ServletContextListener</code></strong>接口</li>
+<li>在监听中会有<code>contextInitialized(ServletContextEvent event)</code>初始化方法</li>
+<li>得到这个<code>context-param</code>的值之后,你就可以做一些操作了.注意,这个时候你的WEB项目还没有完全启动完成.这个动作会比所有的Servlet都要早.换句话说,这个时候,<strong>对<code>&lt;context-param&gt;</code>中的键值做的操作,将在你的WEB项目完全启动之前被执行</strong>.</li>
+</ol>
+<p><code>web.xml</code>中可以定义两种参数：</p>
+<ul>
+<li>全局参数(<code>ServletContext</code>)，通过<code>&lt;context-param&gt;</code>声明</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>key<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>hello<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div></pre></td></tr></table></figure>
+<p> 参数在<code>servlet</code>里面可以通过<code>getServletContext().getInitParameter(&quot;key&quot;)</code>得到</p>
+<ul>
+<li><p><code>servlet</code>参数，通过在<code>servlet</code>中声明    　　 </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>param1<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>avalible in servlet init()<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span>   </div><div class="line"><span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>参数只能在<code>servlet</code>的<code>init()</code>方法中通过<code>this.getInitParameter(&quot;param1&quot;)</code>取得</p>
+<h3 id="Spring上下文容器配置"><a href="#Spring上下文容器配置" class="headerlink" title="Spring上下文容器配置"></a>Spring上下文容器配置</h3><p>　Spring提供了实现<code>ServletContextListener</code>接口的上下文初始化监听器：<code>org.springframework.web.context.ContextLoaderListener</code></p>
+<p>   Spring为我们提供的IOC容器，需要我们指定容器的配置文件，然后由该监听器初始化并创建该容器。要求你指定配置文件的地址及文件名称，一定要使用：<code>contextConfigLocation</code>作为参数名称。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>contextConfigLocation<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>classpath:web-context.xml<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>org.springframework.web.context.ContextLoaderListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>该监听器，默认读取<code>/WEB-INF/</code>下的<code>web-context.xml</code>文件。但是通过<code>context-param</code>指定配置文件路径后，便会去你指定的路径下读取对应的配置文件，并进行初始化。</p>
+<h4 id="执行流程-1"><a href="#执行流程-1" class="headerlink" title="执行流程"></a>执行流程</h4><p><code>ServletContext</code>是由<code>Servlet</code>容器初始化的，那Spring的<code>ContextLoaderListener</code>又做了什么初始化呢？</p>
+<ol>
+<li><code>servlet</code>容器启动，为应用创建一个“全局上下文环境”：<code>ServletContext</code></li>
+<li>容器调用<code>web.xml</code>中配置的<code>contextLoaderListener</code>，初始化<code>WebApplicationContext</code>上下文环境（即IOC容器），加载<code>context-param</code>指定的配置文件信息到IOC容器中。<code>WebApplicationContext</code>在<code>ServletContext</code>中以键值对的形式保存</li>
+<li>容器初始化<code>web.xml</code>中配置的<code>servlet</code>，为其初始化自己的上下文信息<code>servletContext</code>，并加载其设置的配置信息到该上下文中。<strong>将WebApplicationContext设置为它的父容器。</strong></li>
+<li><p>此后的所有<code>servlet</code>的初始化都按照3步中方式创建，初始化自己的上下文环境，将<code>WebApplicationContext</code>设置为自己的父上下文环境。</p>
+<p><img src="http://images.cnitblog.com/blog/698747/201502/011528042224276.png" alt="img"></p>
+</li>
+</ol>
+<p>​       <strong>对于作用范围而言，在<code>DispatcherServlet</code>中可以引用由<code>ContextLoaderListener</code>所创建的<code>ApplicationContext</code>中的内容，而反过来不行。</strong></p>
+<p>​       当Spring在执行<code>ApplicationContext</code>的<code>getBean(BeanName)</code>时，如果在自己<code>context</code>中找不到对应的bean，则会在父<code>ApplicationContext</code>中去找。这也解释了为什么我们可以在<code>DispatcherServlet</code>中获取到由<code>ContextLoaderListener</code>对应的<code>ApplicationContext中的bean</code>。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.cnblogs.com/brolanda/p/4265597.html" target="_blank" rel="external">Spring-MVC理解之一：应用上下文webApplicationContext</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[init-method、@PostConstruct、afterPropertiesSet孰先孰后]]></title>
       <url>http://zsr.github.io/2017/05/08/Spring-bean-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/</url>
       <content type="html"><![CDATA[<p>Spring 允许在 Bean 在初始化完成后以及 Bean 销毁前执行特定的操作，常用的设定方式有以下三种：</p>
