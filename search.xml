@@ -17,6 +17,7 @@
 <li><strong>Factory（抽象工厂）：</strong>在抽象工厂类中，声明了工厂方法(Factory Method)，用于返回一个产品。抽象工厂是工厂方法模式的核心，所有创建对象的工厂类都必须实现该接口。</li>
 <li><strong>ConcreteFactory（具体工厂）：</strong>它是抽象工厂类的子类，实现了抽象工厂中定义的工厂方法，并可由客户端调用，返回一个具体产品类的实例。</li>
 </ul>
+<a id="more"></a>
 <h3 id="时序图"><a href="#时序图" class="headerlink" title="时序图"></a>时序图</h3><p><img src="http://design-patterns.readthedocs.io/zh_CN/latest/_images/seq_FactoryMethod.jpg" alt="img"></p>
 <h3 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h3><p><strong>与简单工厂模式相比，工厂方法模式最重要的区别是引入了抽象工厂角色，</strong>抽象工厂可以是接口，也可以是抽象类或者具体类，代码如下所示：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">Factory</span> </span>&#123;  </div><div class="line">    <span class="function"><span class="keyword">public</span> Product <span class="title">factoryMethod</span><span class="params">()</span></span>;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
