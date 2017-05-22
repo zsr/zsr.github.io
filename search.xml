@@ -4,6 +4,12 @@
   
     
     <entry>
+      <title><![CDATA[设计模式-单例模式]]></title>
+      <url>http://zsr.github.io/2017/05/19/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/</url>
+      <content type="html"></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[设计模式-建造者模式]]></title>
       <url>http://zsr.github.io/2017/05/18/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
       <content type="html"><![CDATA[<p>​       在软件开发中，存在大量类似汽车一样的复杂对象，它们拥有一系列成员属性，这些成员属性中有些是引用类型的成员对象。而且在这些复杂对象中，还可能存在一些限制条件，如某些属性没有赋值则复杂对象不能作为一个完整的产品使用；有些属性的赋值必须按照某个顺序，一个属性没有赋值之前，另一个属性可能无法赋值等。</p>
