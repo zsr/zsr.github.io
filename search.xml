@@ -4,6 +4,67 @@
   
     
     <entry>
+      <title><![CDATA[JVM运行参数]]></title>
+      <url>http://zsr.github.io/2017/06/26/JVM%E8%BF%90%E8%A1%8C%E5%8F%82%E6%95%B0/</url>
+      <content type="html"><![CDATA[<h3 id="Java-JVM内存介绍"><a href="#Java-JVM内存介绍" class="headerlink" title="Java JVM内存介绍"></a>Java JVM内存介绍</h3><p>JVM管理两种类型的内存，堆和非堆。按照官方的说法：“Java 虚拟机具有一个堆，堆是运行时数据区域，所有类实例和数组的内存均从此处分配。堆是在 Java 虚拟机启动时创建的。”“在JVM中堆之外的内存称为非堆内存(Non-heap memory)”。简单来说堆就是Java代码可及的内存，是留给开发人员使用的；非堆就是JVM留给自己用的，所以方法区、JVM内部处理或优化所需的内存(如JIT编译后的代码缓存)、每个类结构(如运行时常数池、字段和方法数据)以及方法和构造方法的代码都在非堆内存中，它和堆不同，运行期内GC不会释放其空间。</p>
+<h4 id="堆内存分配"><a href="#堆内存分配" class="headerlink" title="堆内存分配"></a>堆内存分配</h4><p>JVM初始分配的内存由-Xms指定，默认是物理内存的1/64；JVM最大分配的内存由-Xmx指定，默认是物理内存的1/4。默认空余堆内存小于 40%时，JVM就会增大堆直到-Xmx的最大限制；空余堆内存大于70%时，JVM会减少堆直到-Xms的最小限制。因此服务器一般设置-Xms、 -Xmx相等以避免在每次GC 后调整堆的大小。可以利用JVM提供的-Xmn -Xms -Xmx等选项可进行堆内存设置，一般的要将-Xms和-Xmx选项设置为相同，而-Xmn为1/4的-Xmx值，建议堆的最大值设置为可用内存的最大值的80%。</p>
+<p>初始化堆的大小是JVM在启动时向系统申请的内存的大小。一般而言，这个参数不重要。但是有的应用程序在大负载的情况下会急剧地占用更多的内存，此时这个参数就是显得非常重要，如果JVM启动时设置使用的内存比较小而在这种情况下有许多对象进行初始化，JVM就必须重复地增加内存来满足使用。由于这种原因，我们一般把-Xms和-Xmx设为一样大，而堆的最大值受限于系统使用的物理内存。一般使用数据量较大的应用程序会使用持久对象，内存使用有可能迅速地增长。当应用程序需要的内存超出堆的最大值时JVM就会提示内存溢出，并且导致应用服务崩溃。所以，如果Xms超过了Xmx值，或者堆最大值和非堆最大值的总和超过了物理内存或者操作系统的最大限制都会引起服务器启动不起来。</p>
+<h4 id="非堆内存分配"><a href="#非堆内存分配" class="headerlink" title="非堆内存分配"></a>非堆内存分配</h4><p>也叫永久保存的区域，用于存放Class和Meta信息,Class在被Load的时候被放入该区域。它和存放类实例(Instance)的Heap区域不同,GC(Garbage Collection)不会在主程序运行期对PermGen space进行清理。JVM使用-XX:PermSize设置非堆内存初始值，默认是物理内存的1/64；由XX:MaxPermSize设置最大非堆内存的大小，默认是物理内存的1/4。 GC不会对PermGen space进行清理，所以如果你的APP会LOAD很多CLASS的话,就很可能出现PermGen space错误。</p>
+<h4 id="JVM内存限制-最大值"><a href="#JVM内存限制-最大值" class="headerlink" title="JVM内存限制(最大值)"></a>JVM内存限制(最大值)</h4><p>首先JVM内存限制于实际的最大物理内存，假设物理内存无限大的话，JVM内存的最大值跟操作系统有很大的关系。简单的说就32位处理器虽然可控内存空间有4GB,但是具体的操作系统会给一个限制，这个限制一般是2GB-3GB（一般来说Windows系统下为1.5G-2G，Linux系统 下为2G-3G），而64bit以上的处理器就不会有限制了。</p>
+<h3 id="三种内存溢出异常介绍"><a href="#三种内存溢出异常介绍" class="headerlink" title="三种内存溢出异常介绍"></a>三种内存溢出异常介绍</h3><h4 id="OutOfMemoryError：Java-heap-space-堆溢出"><a href="#OutOfMemoryError：Java-heap-space-堆溢出" class="headerlink" title="OutOfMemoryError：Java heap space 堆溢出"></a>OutOfMemoryError：Java heap space 堆溢出</h4><p>内存溢出主要存在问题就是出现在这个情况中。当在JVM中如果98％的时间是用于GC且可用的 Heap size 不足2％的时候将抛出此异常信息。</p>
+<h4 id="OutOfMemoryError：PermGen-space-非堆溢出（永久保存区域溢出）"><a href="#OutOfMemoryError：PermGen-space-非堆溢出（永久保存区域溢出）" class="headerlink" title="OutOfMemoryError：PermGen space 非堆溢出（永久保存区域溢出）"></a>OutOfMemoryError：PermGen space 非堆溢出（永久保存区域溢出）</h4><p>这种错误常见在web服务器对JSP进行pre compile的时候。如果你的WEB APP下都用了大量的第三方jar, 其大小超过了jvm默认的大小(4M)那么就会产生此错误信息了。如果web app用了大量的第三方jar或者应用有太多的class文件而恰好MaxPermSize设置较小，超出了也会导致这块内存的占用过多造成溢出，或者tomcat热部署时侯不会清理前面加载的环境，只会将context更改为新部署的，非堆存的内容就会越来越多。</p>
+<h4 id="OutOfMemoryError：unable-to-create-new-native-thread-无法创建新的线程"><a href="#OutOfMemoryError：unable-to-create-new-native-thread-无法创建新的线程" class="headerlink" title="OutOfMemoryError：unable to create new native thread. 无法创建新的线程"></a>OutOfMemoryError：unable to create new native thread. 无法创建新的线程</h4><p>这种现象比较少见，也比较奇怪，主要是和jvm与系统内存的比例有关。这种怪事是因为JVM已经被系统分配了大量的内存（比如1.5G），并且它至少要占用可用内存的一半。</p>
+<h3 id="Java-JVM内存配置"><a href="#Java-JVM内存配置" class="headerlink" title="Java JVM内存配置"></a>Java JVM内存配置</h3><p>在Linux下设置Tomcat的java虚拟机内存</p>
+<ul>
+<li>查看<code>catalina.sh</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">121 if [ -r &quot;$CATALINA_BASE/bin/setenv.sh&quot; ]; then</div><div class="line">122   . &quot;$CATALINA_BASE/bin/setenv.sh&quot;</div><div class="line">123 elif [ -r &quot;$CATALINA_HOME/bin/setenv.sh&quot; ]; then</div><div class="line">124   . &quot;$CATALINA_HOME/bin/setenv.sh&quot;</div><div class="line">125 fi</div></pre></td></tr></table></figure>
+<ul>
+<li>在tomcat的bin目录下查看是否有<code>setenv.sh</code>,如果没有则创建，然后添加如下内容</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">export JAVA_OPTS=&apos;-XX:PermSize=128m -XX:MaxPermSize=256m  -Xms512m -Xmx1024m -Xmn386M -Xss228k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=8 -XX:ParallelGCThreads=4 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+CMSClassUnloadingEnabled -XX:+CMSPermGenSweepingEnabled  -XX:CMSInitiatingOccupancyFraction=70 -XX:CMSFullGCsBeforeCompaction=5 -XX:+UseCMSCompactAtFullCollection -XX:-HeapDumpOnOutOfMemoryError -Xloggc:/srv/tomcat-forum-topic/logs/gc.log -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xdebug -Xrunjdwp:transport=dt_socket,address=10136,server=y,suspend=n -Djava.rmi.server.hostname=192.168.3.57 -Dcom.sun.management.jmxremote.port=10009 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false&apos;</div></pre></td></tr></table></figure>
+<h4 id="参数说明"><a href="#参数说明" class="headerlink" title="参数说明"></a>参数说明</h4><ul>
+<li><code>-XX:PermSize</code>：设定内存的永久保存区域；</li>
+<li><code>-XX:MaxPermSize</code>：设定最大内存的永久保存区域；</li>
+<li><code>-Xms</code>： Java Heap初始值，Server端JVM最好将-Xms和-Xmx设为相同值，开发测试机JVM可以保留默认值；</li>
+<li><code>-Xmx</code>： Java Heap最大值，默认值为物理内存的1/4；</li>
+<li><code>-Xmn</code>： Java Heap Young区大小，不熟悉最好保留默认值，一般设置为Xmx的3、4分之一；</li>
+<li><code>-Xss</code>： 每个线程的Stack大小，不熟悉最好保留默认值；</li>
+<li><code>-XX:NewSize</code>：设置JVM堆的‘新生代’的默认大小；</li>
+<li><code>-XX:MaxNewSize</code>：设置JVM堆的‘新生代’的最大大小；</li>
+<li><code>-XX:SurvivorRatio</code>：Eden区与Survivor区的大小比值;设置为8,则两个Survivor区与一个Eden区的比值为2:8,一个Survivor区占整个年轻代的1/10</li>
+<li><code>-XX:MaxTenuringThreshold</code>：垃圾最大年龄；如果设置为0的话,则年轻代对象不经过Survivor区,直接进入年老代. 对于年老代比较多的应用,可以提高效率.如果将此值设置为一个较大值,则年轻代对象会在Survivor区进行多次复制,这样可以增加对象再年轻代的存活时间,增加在年轻代即被回收的概率。该参数只有在串行GC时才有效.</li>
+<li><code>-XX:ParallelGCThreads</code>：并行收集器的线程数；此值最好配置与处理器数目相等 同样适用于CMS</li>
+<li><code>-XX:+UseConcMarkSweepGC</code>：使用CMS内存收集；</li>
+<li><code>-XX:+UseParNewGC</code>：设置年轻代为并行收集；可与CMS收集同时使用</li>
+<li><code>-XX:+CMSParallelRemarkEnabled</code>：降低标记停顿</li>
+<li><code>-XX:+CMSClassUnloadingEnabled</code>：显示在使用CMS GC时，未加载类是否可用。JVM进行GC时便会清除永久代，并且删除不再使用的类，这个选项只会在<code>UseConcMarkSweepGC</code> 可用时才起作用。</li>
+<li><code>-XX:+CMSPermGenSweepingEnabled</code>：显示清除永久代是否可用。默认情况下这个参数是不可用的，所以要协调永久代问题，就必须显示设置这个参数。这个参数在Java 6里面被删除，所以如果你在使用Java 6或以上版本，你将不得不使用 -XX:+CMSClassUnloadingEnabled 选项。</li>
+<li><code>-XX:CMSInitiatingOccupancyFraction＝70</code>：使用cms作为垃圾回收，使用70％后开始CMS收集</li>
+<li><code>-XX:CMSFullGCsBeforeCompaction=5</code> ：多少次后进行内存压缩；由于并发收集器不对内存空间进行压缩,整理,所以运行一段时间以后会产生”碎片”,使得运行效率降低.此值设置运行多少次GC以后对内存空间进行压缩,整理.</li>
+<li><code>-XX:+UseCMSCompactAtFullCollection</code>：在FULL GC的时候，对年老代的压缩；CMS是不会移动内存的，因此非常容易产生碎片，导致内存不够用，因此，内存的压缩这个时候就会被启用。</li>
+<li><code>-XX:HeapDumpOnOutOfMemoryError</code>：当发生OutOfMemoryError错误时，才能触发<code>-XX:HeapDumpOnOutOfMemoryError</code> 输出到<code>-XX:HeapDumpPath</code>指定位置。</li>
+<li><code>-Xloggc:/gc.log</code>：指定垃圾收集日志文件</li>
+<li><code>-XX:+PrintGCDetails</code>：每次GC时打印详细信息</li>
+<li><code>-XX:+PrintGCTimeStamps</code>：GC发生的时间</li>
+<li><code>XX:+PrintGCApplicationStoppedTime</code>：GC消耗了多少时间</li>
+<li><code>XX:+PrintGCApplicationConcurrentTime</code>：GC之间运行了多少时间</li>
+<li><code>-Xdebug -Xrunjdwp:transport=dt_socket,address=10136,server=y,suspend=n</code>：方便客户端远程调试</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">-XDebug               启用调试。</div><div class="line">-Xnoagent             禁用默认sun.tools.debug调试器。</div><div class="line">-Djava.compiler=NONE  禁止 JIT 编译器的加载。</div><div class="line">-Xrunjdwp             加载JDWP的JPDA参考执行实例。</div><div class="line">transport             用于在调试程序和 VM 使用的进程之间通讯。</div><div class="line">dt_socket             套接字传输。</div><div class="line">dt_shmem              共享内存传输，仅限于 Windows。</div><div class="line">server=y/n            VM 是否需要作为调试服务器执行。</div><div class="line">address=3999          调试服务器的端口号，客户端用来连接服务器的端口号。</div><div class="line">suspend=y/n           是否在调试客户端建立连接之后启动 VM 。</div></pre></td></tr></table></figure>
+<ul>
+<li><code>-Djava.rmi.server.hostname=192.168.3.57</code>：指定ip</li>
+<li><code>-Dcom.sun.management.jmxremote.port=10009</code>：指定端口</li>
+<li><code>-Dcom.sun.management.jmxremote.ssl=false</code>：指定是否需要密码验证</li>
+<li><code>-Dcom.sun.management.jmxremote.authenticate=false</code>：指定是否使用 SSL 通讯</li>
+</ul>
+<p><code>备注：JMX(Java Management Extensions)是一个为应用程序植入管理功能的框架,通过使用JMX，我们可以实时查询应用程序中通过JMX向外公布的相应参数或者是其他应用数据;可以使用Jconsole监控</code></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://blog.csdn.net/ye1992/article/details/9344807" target="_blank" rel="external">Tomcat中JVM内存溢出及合理配置</a></p>
+<p><a href="http://www.cnblogs.com/redcreen/archive/2011/05/04/2037057.html" target="_blank" rel="external">JVM系列三:JVM参数设置、分析</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[RPC介绍]]></title>
       <url>http://zsr.github.io/2017/06/20/RPC%E4%BB%8B%E7%BB%8D/</url>
       <content type="html"><![CDATA[<p>转载:<a href="http://blog.csdn.net/mindfloating/article/details/39474123" target="_blank" rel="external">深入浅出 RPC - 深入篇</a></p>
@@ -87,7 +148,42 @@
     <entry>
       <title><![CDATA[Thrift详解]]></title>
       <url>http://zsr.github.io/2017/06/20/Thrift%E8%AF%A6%E8%A7%A3/</url>
-      <content type="html"></content>
+      <content type="html"><![CDATA[<p>作为一个高性能的RPC框架，</p>
+<h3 id="主要特点"><a href="#主要特点" class="headerlink" title="主要特点"></a>主要特点</h3><ol>
+<li>基于二进制的高性能的编解码框架</li>
+<li>基于NIO的底层通信</li>
+<li>相对简单的服务调用模型</li>
+<li>使用IDL支持跨平台调用</li>
+</ol>
+<h3 id="核心组件有"><a href="#核心组件有" class="headerlink" title="核心组件有"></a>核心组件有</h3><ol>
+<li>TProtocol 协议和编解码组件</li>
+<li>TTransport 传输组件</li>
+<li>TProcessor 服务调用组件</li>
+<li>TServer，Client 服务器和客户端组件</li>
+<li>IDL 服务描述组件，负责生产跨平台客户端</li>
+</ol>
+<h3 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h3><p> <img src="http://www.blogjava.net/images/blogjava_net/ldwblog/thrift%E6%9E%B6%E6%9E%84%E5%9B%BE.png" alt="img"></p>
+<p>thrift是一个客户端和服务器端的架构体系（c/s），在最上层是用户自行实现的业务逻辑代码。第二层是由thrift编译器自动生成的代码，主要用于结构化数据的解析，发送和接收。TServer主要任务是高效的接受客户端请求，并将请求转发给Processor处理。Processor负责对客户端的请求做出响应，包括RPC请求转发，调用参数解析和用户逻辑调用，返回值写回等处理。从TProtocol以下部分是thirft的传输协议和底层I/O通信。TProtocol是用于数据类型解析的，将结构化数据转化为字节流给TTransport进行传输。TTransport是与底层数据传输密切相关的传输层，负责以字节流方式接收和发送消息体，不关注是什么数据类型。底层IO负责实际的数据传输，包括socket、文件和压缩数据流等。</p>
+<h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><p>TProtocol、TProcessor等会简单略过。</p>
+<hr>
+<p><img src="http://img.voidcn.com/vcimg/000/005/545/078_fcf_750.jpg" alt="这里写图片描述"></p>
+<hr>
+<h2 id="TNonblockingSocket"><a href="#TNonblockingSocket" class="headerlink" title="TNonblockingSocket"></a>TNonblockingSocket</h2><h4 id="协议层TProtocol"><a href="#协议层TProtocol" class="headerlink" title="协议层TProtocol"></a>协议层TProtocol</h4><p>在传输协议上总体上划分为文本(text)和二进制(binary)传输协议, 为节约带宽，提供传输效率，一般情况下使用二进制类型的传输协议为多数。</p>
+<ul>
+<li>TBinaryProtocol：二进制编码格式进行数据传输。 </li>
+<li>TCompactProtocol：高效的编码方式，对数据进行压缩。 </li>
+<li>TJSONProtocol：使用JSON的数据编码协议进行数据传输。 </li>
+<li>TSimpleJSONProtocol：这种节约只提供JSON只写的协议，适用于通过脚本语言解析    </li>
+</ul>
+<h4 id="传输层TTransport"><a href="#传输层TTransport" class="headerlink" title="传输层TTransport"></a>传输层TTransport</h4><ul>
+<li>TSocket：使用阻塞式I/O进行传输，也是最常见的模式。 </li>
+<li>TFramedTransport：使用非阻塞方式，按块的大小，进行传输。        </li>
+<li>TFileTransport：顾名思义按照文件的方式进程传输，虽然这种方式不提供Java的实现，但是实现起来非常简单。 </li>
+<li>TMemoryTransport：使用内存I/O，就好比Java中的ByteArrayOutputStream实现。 </li>
+<li>TZlibTransport：使用执行zlib压缩，不提供Java的实现。</li>
+<li>TNonblockingTransport：使用非阻塞方式，用于构建异步客户端。</li>
+</ul>
+]]></content>
     </entry>
     
     <entry>
