@@ -301,20 +301,20 @@
 <hr>
 <p><img src="http://img.voidcn.com/vcimg/000/005/545/078_fcf_750.jpg" alt="这里写图片描述"></p>
 <hr>
-<h2 id="TNonblockingSocket"><a href="#TNonblockingSocket" class="headerlink" title="TNonblockingSocket"></a>TNonblockingSocket</h2><h4 id="协议层TProtocol"><a href="#协议层TProtocol" class="headerlink" title="协议层TProtocol"></a>协议层TProtocol</h4><p>在传输协议上总体上划分为文本(text)和二进制(binary)传输协议, 为节约带宽，提供传输效率，一般情况下使用二进制类型的传输协议为多数。</p>
+<h4 id="传输层TTransport"><a href="#传输层TTransport" class="headerlink" title="传输层TTransport"></a>传输层TTransport</h4><ul>
+<li>TSocket：使用阻塞式I/O进行传输，也是最常见的模式。 </li>
+<li>TFramedTransport：使用非阻塞方式，按块的大小，进行传输，。        </li>
+<li>TFileTransport：顾名思义按照文件的方式进程传输，虽然这种方式不提供Java的实现，但是实现起来非常简单。 </li>
+<li>TMemoryTransport：使用内存I/O，就好比Java中的ByteArrayOutputStream实现。 </li>
+<li>TZlibTransport：使用执行zlib压缩，不提供Java的实现。</li>
+<li>TNonblockingTransport：使用非阻塞方式，用于构建异步客户端。</li>
+</ul>
+<h4 id="协议层TProtocol"><a href="#协议层TProtocol" class="headerlink" title="协议层TProtocol"></a>协议层TProtocol</h4><p>在传输协议上总体上划分为文本(text)和二进制(binary)传输协议, 为节约带宽，提供传输效率，一般情况下使用二进制类型的传输协议为多数。</p>
 <ul>
 <li>TBinaryProtocol：二进制编码格式进行数据传输。 </li>
 <li>TCompactProtocol：高效的编码方式，对数据进行压缩。 </li>
 <li>TJSONProtocol：使用JSON的数据编码协议进行数据传输。 </li>
 <li>TSimpleJSONProtocol：这种节约只提供JSON只写的协议，适用于通过脚本语言解析    </li>
-</ul>
-<h4 id="传输层TTransport"><a href="#传输层TTransport" class="headerlink" title="传输层TTransport"></a>传输层TTransport</h4><ul>
-<li>TSocket：使用阻塞式I/O进行传输，也是最常见的模式。 </li>
-<li>TFramedTransport：使用非阻塞方式，按块的大小，进行传输。        </li>
-<li>TFileTransport：顾名思义按照文件的方式进程传输，虽然这种方式不提供Java的实现，但是实现起来非常简单。 </li>
-<li>TMemoryTransport：使用内存I/O，就好比Java中的ByteArrayOutputStream实现。 </li>
-<li>TZlibTransport：使用执行zlib压缩，不提供Java的实现。</li>
-<li>TNonblockingTransport：使用非阻塞方式，用于构建异步客户端。</li>
 </ul>
 ]]></content>
     </entry>
