@@ -48,6 +48,8 @@
 <p>驱逐者线程<code>Evictor</code>被多个连接池共享,但是这些连接池可能属于不同的<code>classloader</code>,所以<code>Evictor</code>必须要保证它的所有行为在<strong>当前这个连接池的classloader</strong>下执行</p>
 <h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://throwsnew.com/2017/06/12/commons-pool/" target="_blank" rel="external">如何设计一个连接池：commons-pool2源码分析</a></p>
 <p><a href="https://juejin.im/entry/592fec83a0bb9f0058a79876" target="_blank" rel="external">Jedis 源码阅读之连接池</a></p>
+<p><a href="http://www.cnblogs.com/newpanderking/p/3875749.html" target="_blank" rel="external">数据库连接池的工作原理</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/21404377" target="_blank" rel="external">数据源连接池的原理及Tomcat中的应用</a></p>
 ]]></content>
     </entry>
     
