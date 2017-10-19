@@ -4,6 +4,28 @@
   
     
     <entry>
+      <title><![CDATA[scala Execution Context]]></title>
+      <url>http://zsr.github.io/2017/10/19/scala-Execution-Context/</url>
+      <content type="html"><![CDATA[<h2 id="Implicits-global-vs-Implicits-defaultContext"><a href="#Implicits-global-vs-Implicits-defaultContext" class="headerlink" title="Implicits.global  vs  Implicits.defaultContext"></a>Implicits.global  vs  Implicits.defaultContext</h2><hr>
+<p><code>Scala Future</code>需要放在执行上下文(线程池)中执行，一般常见的线程池有2种：</p>
+<ul>
+<li><code>Scala  Execution Context</code>：</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> scala.concurrent.<span class="type">ExecutionContext</span>.<span class="type">Implicits</span>.global</div></pre></td></tr></table></figure>
+<p>该线程池是由<code>Scala</code>标准库提供的，它是一种特殊的<code>ForkJoinPool</code>线程池，在高负载时，使用的线程可能比优化时多(对比<code>play</code>或者<code>akka framework</code>)，因此性能可能会降低</p>
+<ul>
+<li><code>Play Default  Execution Context</code>：</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> play.api.libs.concurrent.<span class="type">Execution</span>.<span class="type">Implicits</span>.defaultContext</div></pre></td></tr></table></figure>
+<p>该线程池是由play提供，play应用应该使用这种执行上下文。同时，应该避免阻塞操作放入<code>play execution context</code>，好的办法是放入其他的<code>execution context</code>，避免play应用资源用尽。</p>
+<p>注意：理解哪个线程运行了<code>future</code>非常重要，导入play的默认执行环境（<code>execution context</code>）。这是一个隐式（<code>implicit</code>）的参数，会被传入所有接受回调的<code>future API</code>方法中。执行环境（<code>execution context</code>）通常等价于线程池，但这并不是一定的。</p>
+<p>简单的把同步IO封装入<code>Future</code>并不能将其转换为异步的。如果你不能通过改变应用架构来避免阻塞操作，那么该操作总会在某一时刻被执行的，而相应的线程则会被阻塞。所以，除了将操作封装于<code>Future</code>中，还必须让它运行在配置了足够线程来处理可预计并发的独立执行环境（<code>execution context</code>）中。更多信息请见<a href="https://www.playframework.com/documentation/2.3.x/ThreadPools" target="_blank" rel="external">理解Play线程池</a></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://stackoverflow.com/questions/40301032/what-is-the-difference-between-scalas-execution-context-and-plays-execution-co" target="_blank" rel="external">https://stackoverflow.com/questions/40301032/what-is-the-difference-between-scalas-execution-context-and-plays-execution-co</a></p>
+<p><a href="https://stackoverflow.com/questions/30805337/plays-internal-execution-context" target="_blank" rel="external">https://stackoverflow.com/questions/30805337/plays-internal-execution-context</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[ForkJoinPool]]></title>
       <url>http://zsr.github.io/2017/10/18/ForkJoinPool/</url>
       <content type="html"><![CDATA[<p><code>Java 1.7</code> 引入了一种新的并发框架—— <code>Fork/Join Framework</code></p>
