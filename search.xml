@@ -59,6 +59,7 @@
 <p>在这段代码里没有显式地“把任务分配给线程”，只是分解了任务，而把具体的任务到线程的映射交给了 <code>ForkJoinPool</code> 来完成。</p>
 <h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://blog.dyngr.com/blog/2016/09/15/java-forkjoinpool-internals" target="_blank" rel="external">如何使用 ForkJoinPool 以及原理</a></p>
 <p><a href="http://kaimingwan.com/post/java/forkjoinpooljie-du" target="_blank" rel="external">ForkJoinPool解读</a></p>
+<p><a href="https://ketao1989.github.io/2014/05/24/Java-Fork-Join-Task-Framework-API-Introduce/" target="_blank" rel="external">Java Fork&amp;Join框架使用和实现分析</a></p>
 ]]></content>
     </entry>
     
