@@ -4,6 +4,12 @@
   
     
     <entry>
+      <title><![CDATA[Unicode和UTF-8字符编码]]></title>
+      <url>http://zsr.github.io/2017/10/25/Unicode%E5%92%8CUTF-8%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/</url>
+      <content type="html"></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[SimpleDateFormat线程安全]]></title>
       <url>http://zsr.github.io/2017/10/24/SimpleDateFormat%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8/</url>
       <content type="html"><![CDATA[<p><code>SimpleDateFormat</code> 是 Java 中非常常用的一个类，用于解析和格式化日期字符串，但是 <code>SimpleDateFormat</code> 在多线程环境中并不是线程安全的。</p>
