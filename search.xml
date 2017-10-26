@@ -6,7 +6,56 @@
     <entry>
       <title><![CDATA[Unicode和UTF-8字符编码]]></title>
       <url>http://zsr.github.io/2017/10/25/Unicode%E5%92%8CUTF-8%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/</url>
-      <content type="html"></content>
+      <content type="html"><![CDATA[<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><ul>
+<li><p><strong>Unicode: </strong>(<code>Universal Code</code> 统一码)是一个囊括了世界上所有字符的字符集，其中每一个字符都对应有唯一的编码值（<code>code point</code>），然而它并不是一种什么编码格式，仅仅是字符集而已</p>
+<p><code>Unicode</code> 字符不管具体怎么编码和存储，可以用 <code>UTF-8</code>、<code>UTF-16</code>来编码</p>
+<p><code>UTF-16</code> 的优点是在计算字符串长度，执行索引操作时速度会很快，Java 内部使用<code>UTF-16</code>编码方案</p>
+</li>
+<li><p><strong>UTF-8:</strong> (<code>Unicode Transformation Format</code>)就是在互联网上使用最广的一种<code>Unicode</code>的实现方式(怎么编码，怎么存储)。其他实现方式还包括<code>UTF-16</code>（字符用两个字节或四个字节表示）和<code>UTF-32</code> (字符用四个字节表示）</p>
+<p><code>UTF-8</code>最大的一个特点，就是它是一种变长的编码方式。它可以使用1~4个字节表示一个符号，根据不同的符号而变化字节长度</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">UTF-8 and Unicode cannot be compared. UTF-8 is an encoding used to translate numbers into binary data. Unicode is a character set used to translate characters into numbers.</div></pre></td></tr></table></figure>
+<h3 id="UTF-8编码"><a href="#UTF-8编码" class="headerlink" title="UTF-8编码"></a>UTF-8编码</h3><table>
+<thead>
+<tr>
+<th>字符</th>
+<th>Unicode</th>
+<th>UTF-8</th>
+<th>GBK</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>中</td>
+<td>01001110  00101101（4e2d）</td>
+<td>01001110  00101101（e4b8ad）</td>
+<td>11010110 11010000（d6d0）</td>
+</tr>
+</tbody>
+</table>
+<p><code>UTF-8</code>常用的英文字母被编码成1个字节，汉字通常是3个字节，只有很生僻的字符才会被编码成4个字节.如果要传输的文本包含大量英文字符，用UTF-8编码就能节省空间：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>a = <span class="string">u"中"</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>a</div><div class="line"><span class="string">u'\u4e2d'</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>b = a.encode(<span class="string">"utf-8"</span>)</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>b</div><div class="line"><span class="string">'\xe4\xb8\xad'</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>c = a.encode(<span class="string">"gbk"</span>)</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>c</div><div class="line"><span class="string">'\xd6\xd0'</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+<p>「中」用 GBK 编码转后就是用2个字节表示，用 UTF-8 编码就是 3 个字节，同一个字符用不同的编码方式占用的字节长度可能不一。</p>
+<a id="more"></a>
+<h4 id="编码规则"><a href="#编码规则" class="headerlink" title="编码规则"></a>编码规则</h4><p>1）对于单字节的符号，字节的第一位设为0，后面7位为这个符号的<code>unicode</code>码。因此对于英语字母，<code>UTF-8</code>编码和<code>ASCII</code>码是相同的。</p>
+<p>2）对于n字节的符号（n&gt;1），第一个字节的前n位都设为1，第n+1位设为0，后面字节的前两位一律设为10。剩下的没有提及的二进制位，全部为这个符号的<code>unicode</code>码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Unicode符号范围 | UTF-8编码方式</div><div class="line">(十六进制) | （二进制）</div><div class="line">--------------------+---------------------------------------------</div><div class="line">0000 ~ 007F | 0xxxxxxx</div><div class="line">0080 ~ 07FF | 110xxxxx 10xxxxxx</div><div class="line">0800 ~ FFFF | 1110xxxx 10xxxxxx 10xxxxxx</div><div class="line">1 0000 ~1F FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</div></pre></td></tr></table></figure>
+<p>如果一个字节的第一位是0，则这个字节单独就是一个字符；如果第一位是1，则连续有多少个1，就表示当前字符占用多少个字节。</p>
+<h4 id="BOM"><a href="#BOM" class="headerlink" title="BOM"></a>BOM</h4><p><code>BOM</code>：在一个文本文件或者一段字符编码前加上几个固定的字节用于识别，这些字节保证不对应任何一个字符，所以软件一读就能验明正身：</p>
+<ul>
+<li><code>EF BB BF</code> － <code>UTF-8</code></li>
+<li><code>FF FE</code> － <code>UTF-16LE</code>(<code>Little endian</code>)</li>
+<li><code>FE FF</code> － <code>UTF-16BE</code>(<code>Big endian</code>)</li>
+</ul>
+<p>以汉字「中」为例，<code>Unicode</code>码是4e2d，需要用两个字节存储，一个字节是4e，另一个字节是2d。存储的时候，4e在前，2d在后，就是<code>Big endian</code>(高位字节在前，阅读顺序)方式；2d在前，4e在后，就是<code>Little endian</code>(低位字节在前)方式。<code>Windows</code>的记事本还有<code>Windows</code>其它地方所谓的<code>Unicode</code>编码，其实是<code>UTF-16LE</code></p>
+<h3 id="其他编码"><a href="#其他编码" class="headerlink" title="其他编码"></a>其他编码</h3><h4 id="ISO-8859-1"><a href="#ISO-8859-1" class="headerlink" title="ISO-8859-1"></a>ISO-8859-1</h4><p><code>ISO-8859-1</code>仍然是单字节编码，它总共能表示 256 个字符。</p>
+<h4 id="GB2312"><a href="#GB2312" class="headerlink" title="GB2312"></a>GB2312</h4><p>全称是《信息交换用汉字编码字符集 基本集》，它是<strong>双字节编码</strong>，总的编码范围是 A1-F7，其中从 A1-A9 是符号区，总共包含 682 个符号，从 B0-F7 是汉字区，包含 6763 个汉字。</p>
+<h4 id="GBK"><a href="#GBK" class="headerlink" title="GBK"></a>GBK</h4><p>为了扩展<code>GB2312</code>，加入更多的汉字，它的编码范围是<code>8140~FEFE</code>（去掉 XX7F）总共有 23940 个码位，它能表示 21003 个汉字，它的编码是和 <code>GB2312</code> 兼容的，也就是说用 <code>GB2312</code> 编码的汉字可以用 <code>GBK</code> 来解码，并且不会有乱码。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://stackoverflow.com/questions/3951722/whats-the-difference-between-unicode-and-utf-8" target="_blank" rel="external">https://stackoverflow.com/questions/3951722/whats-the-difference-between-unicode-and-utf-8</a></p>
+<p><a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="external">字符编码笔记：ASCII，Unicode和UTF-8</a></p>
+<p><a href="https://foofish.net/unicode_utf-8.html" target="_blank" rel="external">常识性错误之 Unicode 与 UTF-8</a></p>
+]]></content>
     </entry>
     
     <entry>
