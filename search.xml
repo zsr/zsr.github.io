@@ -4,12 +4,137 @@
   
     
     <entry>
+      <title><![CDATA[tomcat filter分析]]></title>
+      <url>http://zsr.github.io/2017/11/15/tomcat-filter%E5%88%86%E6%9E%90/</url>
+      <content type="html"><![CDATA[<h3 id="Filter"><a href="#Filter" class="headerlink" title="Filter"></a>Filter</h3><ul>
+<li><code>Filter</code>是<code>servlet</code>规范中定义的<code>java web</code>组件, 在所有支持<code>java web</code>的容器中都可以使用</li>
+<li><code>Filter</code>和<code>FilterChain</code>密不可分, <code>Filter</code>可以实现依次调用正是因为有了<code>FilterChain</code></li>
+</ul>
+<p><img src="https://user-gold-cdn.xitu.io/2017/1/16/7714d7aa0f6632da5463aef03464fc54?imageView2/0/w/1280/h/960/ignore-error/1" alt="img"></p>
+<h4 id="Filter接口"><a href="#Filter接口" class="headerlink" title="Filter接口"></a>Filter接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Filter.class</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Filter</span> </span>&#123;</div><div class="line"></div><div class="line">         <span class="comment">// 容器创建的时候调用, 即启动tomcat的时候调用</span></div><div class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(FilterConfig filterConfig)</span> <span class="keyword">throws</span> ServletException</span>;</div><div class="line"></div><div class="line">         <span class="comment">// 由FilterChain调用, 并且传入FilterChain本身, 最后回调FilterChain的doFilter()方法</span></div><div class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></div><div class="line">                 FilterChain chain) <span class="keyword">throws</span> IOException, ServletException;</div><div class="line"></div><div class="line">         <span class="comment">// 容器销毁的时候调用, 即关闭tomcat的时候调用</span></div><div class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>;</div><div class="line">     &#125;</div></pre></td></tr></table></figure>
+<h4 id="FilterChain接口"><a href="#FilterChain接口" class="headerlink" title="FilterChain接口"></a>FilterChain接口</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// FilterChain.class</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">FilterChain</span> </span>&#123;</div><div class="line"></div><div class="line">         <span class="comment">// 由Filter.doFilter()中的chain.doFilter调用</span></div><div class="line">         <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response)</span></span></div><div class="line">             <span class="keyword">throws</span> IOException, ServletException;</div><div class="line"></div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<h3 id="Tomcat-filter源码"><a href="#Tomcat-filter源码" class="headerlink" title="Tomcat filter源码"></a>Tomcat filter源码</h3><h4 id="创建FilterChain"><a href="#创建FilterChain" class="headerlink" title="创建FilterChain"></a>创建FilterChain</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// StandardWrapperValve.class</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">invoke</span><span class="params">(Request request, Response response)</span></span></div><div class="line">        <span class="keyword">throws</span> IOException, ServletException &#123;</div><div class="line">    <span class="comment">// .....省略......</span></div><div class="line">      </div><div class="line">      MessageBytes requestPathMB = request.getRequestPathMB();</div><div class="line">      DispatcherType dispatcherType = DispatcherType.REQUEST;</div><div class="line">      <span class="keyword">if</span> (request.getDispatcherType()==DispatcherType.ASYNC) </div><div class="line">          dispatcherType = DispatcherType.ASYNC;</div><div class="line">      request.setAttribute(Globals.DISPATCHER_TYPE_ATTR,dispatcherType);</div><div class="line">      request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,</div><div class="line">                requestPathMB);</div><div class="line">      <span class="comment">// Create the filter chain for this request</span></div><div class="line">      ApplicationFilterChain filterChain =</div><div class="line">                ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);</div><div class="line">  </div><div class="line">      <span class="comment">// Call the filter chain for this request</span></div><div class="line">      <span class="comment">// <span class="doctag">NOTE:</span> This also calls the servlet's service() method</span></div><div class="line">      <span class="comment">// .....省略......</span></div><div class="line">      <span class="comment">// 执行过滤器链doFilter()</span></div><div class="line">      filterChain.doFilter(request.getRequest(), response.getResponse());</div><div class="line">      <span class="comment">// .....省略......</span></div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>每次请求过来都会创建一个过滤器链(<code>filterChain</code>)，并把待执行的<code>servlet</code>对象存放到过滤器链中。对于每个url，对应的<code>filter</code>个数都是不固定的，<code>filterchain</code>需要保存每个请求所对应的一个<code>filter</code>数组，以及调用到的<code>filter</code>的<code>position</code>，以便继续向下调用<code>filter</code></p>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// ApplicationFilterFactory.class</span></div><div class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ApplicationFilterChain <span class="title">createFilterChain</span><span class="params">(ServletRequest request,</span></span></div><div class="line">            Wrapper wrapper, Servlet servlet) &#123;</div><div class="line"> 	<span class="comment">// .....省略......</span></div><div class="line">   </div><div class="line">    <span class="comment">// Acquire the filter mappings for this Context</span></div><div class="line">    StandardContext context = (StandardContext) wrapper.getParent();</div><div class="line">        FilterMap filterMaps[] = context.findFilterMaps();</div><div class="line"></div><div class="line">    <span class="comment">// If there are no filter mappings, we are done</span></div><div class="line">    <span class="keyword">if</span> ((filterMaps == <span class="keyword">null</span>) || (filterMaps.length == <span class="number">0</span>))</div><div class="line">            <span class="keyword">return</span> (filterChain);</div><div class="line">   </div><div class="line">   <span class="comment">// Add the relevant path-mapped filters to this filter chain </span></div><div class="line">   <span class="comment">// 根据请求url找到匹配的filter，添加进来</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; filterMaps.length; i++) &#123;</div><div class="line">         <span class="keyword">if</span> (!matchFiltersURL(filterMaps[i], requestPath))</div><div class="line">            <span class="keyword">continue</span>;</div><div class="line">        ...</div><div class="line">        filterChain.addFilter(filterConfig);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// Add filters that match on servlet name second</span></div><div class="line">    <span class="comment">// 如果配置了根据servlet名称过滤，则再寻找一遍filter</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; filterMaps.length; i++) &#123;</div><div class="line">        <span class="keyword">if</span> (!matchFiltersServlet(filterMaps[i], servletName))</div><div class="line">            <span class="keyword">continue</span>;</div><div class="line">        ...</div><div class="line">        filterChain.addFilter(filterConfig);</div><div class="line">    &#125;</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>创建顺序：</p>
+<ol>
+<li>把要执行的<code>servlet</code>存放到过滤器链中。</li>
+<li>如果没有配置过滤器则<code>return</code>一个空的过滤器链（只包含上面设置的servlet）。</li>
+<li>如果配置<code>url-pattern</code>过滤器，则把匹配的过滤器加入到过滤器链中</li>
+<li>如果配置<code>servlet-name</code>过滤器，则把匹配的过滤器加入到过滤器链中</li>
+</ol>
+<p><strong>注意: <code>filterChain.addFilter()</code>顺序与<code>web.xml</code>中定义的<code>Filter</code>顺序一致，所以过滤器的执行顺序是按定义的上下顺序决定的。</strong></p>
+<h4 id="过滤器链执行"><a href="#过滤器链执行" class="headerlink" title="过滤器链执行"></a>过滤器链执行</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// StandardWrapperValve.class</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">invoke</span><span class="params">(Request request, Response response)</span></span></div><div class="line">        <span class="keyword">throws</span> IOException, ServletException &#123;</div><div class="line">      <span class="comment">// .....省略......</span></div><div class="line">     <span class="keyword">if</span> ((servlet != <span class="keyword">null</span>) &amp;&amp; (filterChain != <span class="keyword">null</span>)) &#123;</div><div class="line">      <span class="comment">// 执行过滤器链doFilter()</span></div><div class="line">      filterChain.doFilter(request.getRequest(), response.getResponse());</div><div class="line">      <span class="comment">// .....省略......</span></div><div class="line">     &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果<code>servlet</code>和过滤器链都不为空，则开始调用过滤器链的<code>doFilter()</code>方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response)</span></span></div><div class="line">        <span class="keyword">throws</span> IOException, ServletException &#123;</div><div class="line">    <span class="comment">// .....省略......</span></div><div class="line">    <span class="comment">// ***整个Filter流程的实现就是由这个方法完成***</span></div><div class="line">  	internalDoFilter(request,response);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h5 id="ApplicationFilterChain-internalDoFilter"><a href="#ApplicationFilterChain-internalDoFilter" class="headerlink" title="ApplicationFilterChain.internalDoFilter()"></a>ApplicationFilterChain.internalDoFilter()</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">internalDoFilter</span><span class="params">(ServletRequest request,</span></span></div><div class="line">                                 ServletResponse response)</div><div class="line">       <span class="keyword">throws</span> IOException, ServletException &#123;</div><div class="line">	<span class="comment">// Call the next filter if there is one</span></div><div class="line">   <span class="keyword">if</span> (pos &lt; n) &#123;</div><div class="line">       ApplicationFilterConfig filterConfig = filters[pos++];</div><div class="line">       <span class="comment">// 获取Filter</span></div><div class="line">       Filter filter = filterConfig.getFilter();</div><div class="line">       <span class="comment">// .....省略......</span></div><div class="line">       <span class="comment">// 调用Filter的doFilter方法并把FilterChain本身传进去(this)</span></div><div class="line">       filter.doFilter(request, response, <span class="keyword">this</span>);</div><div class="line">     </div><div class="line">       <span class="keyword">return</span>;</div><div class="line">   &#125;</div><div class="line">  </div><div class="line">    <span class="comment">// We fell off the end of the chain -- call the servlet instance</span></div><div class="line">    <span class="comment">// .....省略......</span></div><div class="line">    <span class="comment">// 过滤器全部执行后，执行Servlet的service方法(自己的业务逻辑)</span></div><div class="line">    servlet.service(request, response); </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p> <code>FilterChain</code>调用<code>Filter</code>后，<code>Filter</code>再执行<code>FilterChain.doFilter(request, response)</code>，可见<code>FilterChain</code>与<code>Filter</code>构成回调模式(这个也是与<code>Spring Interceptor</code>不同点, <code>Interceptor</code>基于<code>java</code>反射机制)</p>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p>假设下面的<code>Filter</code>就是调用链中的最后一个<code>Filter</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span><span class="params">(ServletRequest request, ServletResponse response,</span></span></div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException &#123;</div><div class="line"></div><div class="line">        Log.info(<span class="string">"before"</span>);</div><div class="line">        chain.doFilter(request, response);       </div><div class="line">        Log.info(<span class="string">"after"</span>);</div><div class="line">     &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ol>
+<li>在<code>LogFilter</code>调用<code>chain.doFilter</code>之后就跳过了<code>if</code>语句从而调用了真正的<code>servlet</code>, 然后<code>internalDoFilter</code>方法就结束(出栈)了, 紧接着就是调用<code>Log.info(&quot;after&quot;)</code>了, 然后<code>LogFilter的doFilter就结束了(也出栈了)</code>, 紧接着就是<code>internalDoFilter</code>中<code>filter.doFilter(request, response, this)</code>的结束然后<code>return</code>, 然后就是调用上一个<code>filter</code>的<code>chain.doFilter()</code>之后的代码, 以此类推.</li>
+<li><code>Filter</code>调用链的实现其实就是一个方法调用链的过程. 刚开始, <code>Filter Chain</code>每调用一个<code>Filter.doFilter()</code>方法就是向方法调用栈中进行压栈操作(代码上的体现就是执行<code>Filter.doFilter</code>之前的代码), 当<code>Filter</code>全部调用完成之后就调用真正处理请求的<code>servlet</code>, 然后由方法调用链自动进行出栈操作(代码上的体现就是执行<code>Filter.doFilter</code>之后的代码), 从而完成整个<code>Filter</code>的调用链. <strong>因为<code>Filter</code>功能实现实际上就是利用了方法的压栈出栈</strong>, 所以可以在调用<code>chain.doFilter</code>之前将方法返回, 让容器不在调用<code>servlet</code>方法, 从而实现权限的控制, 关键词的过滤等功能.</li>
+</ol>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.bijishequ.com/detail/519398?p=" target="_blank" rel="external">Tomcat Filter 源码分析</a></p>
+<p><a href="https://juejin.im/entry/587c3a125c497d0058a84537" target="_blank" rel="external">Filter 和 Interceptor 的比较</a></p>
+<p>​     </p>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[中文乱码]]></title>
+      <url>http://zsr.github.io/2017/10/26/%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81/</url>
+      <content type="html"><![CDATA[<h3 id="乱码原因"><a href="#乱码原因" class="headerlink" title="乱码原因"></a>乱码原因</h3><p>字符在保存时的编码格式如果和要显示的编码格式不一样的话，就会出现乱码问题。Java在运行期一律以<code>Unicode</code>来存储字符,这样有利的支持了多语言环境。Java读文件的时候会用到系统默认的编码来解码文件。所以在用<code>FileInputStream</code>类读取文件可以指定编码读取。　</p>
+<p><code>JAVA</code>在网络传输中使用的编码是<code>ISO-8859-1</code>，故在输出时需要进行转化，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">String str=<span class="keyword">new</span> String(str.getBytes(<span class="string">"开发环境编码"</span>),<span class="string">"ISO-8859-1"</span>);</div></pre></td></tr></table></figure>
+<p>经过网络编码后的中文，要正确显示在页面上必须要用类似于:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Stirng str=<span class="keyword">new</span> String(str.getBytes(<span class="string">"ISO-8859-1"</span>),<span class="string">"开发环境编码"</span>);</div></pre></td></tr></table></figure>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p>浏览器请求服务，服务器返回响应</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">http request——————————&gt;http response</div></pre></td></tr></table></figure>
+<p><code>request</code>请求过程：</p>
+<ul>
+<li>浏览器<code>http</code>响应增加一个<code>Content-Type:text/html; charset=utf-8</code>,发送请求</li>
+<li><code>Tomcat</code>接受请求(不设置<code>URIEncodng</code>)</li>
+<li><code>java</code>服务端处理请求</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;</div><div class="line">    System.out.println(<span class="string">"name: "</span>+newString(req.getParameter(<span class="string">"name"</span>).getBytes(<span class="string">"iso8859-1"</span>),<span class="string">"utf-8"</span>));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>编码转换过程：</p>
+<ul>
+<li>浏览器对字符做百分号编码</li>
+<li><code>Tomcat</code>解百分号编码</li>
+<li><code>ISO8859-1</code>编码转<code>Java</code>内码</li>
+<li><code>Java</code>内码转<code>ISO8859-1</code>编码</li>
+<li>把字节数组当成<code>utf-8</code>编码转<code>Java</code>内码</li>
+<li><p><code>Java</code>内码转输出编码</p>
+<p><strong>注：</strong></p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">String.getBytes(<span class="string">"utf-8"</span>): 把java内码转成utf-<span class="number">8</span>编码</div><div class="line"><span class="keyword">new</span> String(bytes[],<span class="string">"utf-8"</span>): 把字节数组当成utf-<span class="number">8</span>编码转成java内码</div></pre></td></tr></table></figure>
+<h4 id="浏览器对字符做百分号编码"><a href="#浏览器对字符做百分号编码" class="headerlink" title="浏览器对字符做百分号编码"></a><strong>浏览器对字符做百分号编码</strong></h4><p>对于[中国]这两个字符，他们的<code>utf-8</code>编码分别是<code>0xE4B8AD</code>、<code>0xE59BBD</code>，每个字符占用三个字节。经过百分号编码后变成了<code>%E4%B8%AD</code>、<code>%E5%9B%BD</code>，可以看到百分号编码对原始编码是无损的，它只是把<strong>原始字节</strong>变成了<strong>%+原始字节</strong>的16进制表示。比如字节<code>0xE4</code>，转成百分号编码为<code>%E4</code>，有一个字节变成了三个字节。</p>
+<h4 id="Tomcat解码百分号编码"><a href="#Tomcat解码百分号编码" class="headerlink" title="Tomcat解码百分号编码"></a><strong>Tomcat解码百分号编码</strong></h4><p>解码百分号编码也很简单，其实就是去掉百分号，然后将百分号后的两个字节合并成一个字节，如百分号编码<code>%E4</code>，解码后变为字节<code>0xE4</code>。到这一步“中国”这两个字符就变成了<code>0xE4B8AD</code>、<code>0xE59BBD</code>。</p>
+<h4 id="ISO8859-1转java内码"><a href="#ISO8859-1转java内码" class="headerlink" title="ISO8859-1转java内码"></a>ISO8859-1转java内码</h4><p><code>ISO8859-1</code>与<code>ascii</code>一样都是单字节字符集，不同的是它把最高位利用起来了，增加了一些西方字符(如±、÷等字符)</p>
+<p>这里说的<code>java</code>内码是<code>java</code>程序运行时，在内存中存储字符的编码，用的是<code>unicode</code>标准中定义的<code>utf-16</code>编码</p>
+<p><code>utf-16</code>是把<code>unicode</code>字符编码成2字节或4字节。<code>ISO8859-1</code>是8位长的单字节字符编码，所以<code>utf-16</code>编码和<code>ISO8859-1</code>编码是不兼容的，但是utf-16包含ISO8859-1中的所有字符.</p>
+<p>Tomcat解码百分号编码后，[中国]这两个字符在内存中是这样的<code>0xE4B8ADE59BBD</code>，正好六个字节。这其实是这两个字符的<code>utf-8</code>编码序列，但是由于并没有告诉<code>tomcat</code>这是什么字符编码序列，所以<code>tomcat</code>就认为这是一个<code>ISO8859-1</code>编码序列，并把它告诉了java程序，java程序要做的就是把这个字节序列按照<code>ISO8859-1</code>转换成<code>utf-16</code>，转换成功后的对应关系是这样的:</p>
+<table>
+<thead>
+<tr>
+<th>ISO8859-1</th>
+<th>0xE4</th>
+<th>0xB8</th>
+<th>0xAD</th>
+<th>0xE5</th>
+<th>0x9B</th>
+<th>0xBD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UTF-16</td>
+<td>0x00E4</td>
+<td>0x00B8</td>
+<td>0x00AD</td>
+<td>0x00E5</td>
+<td>0x009B</td>
+<td>0x00BD</td>
+</tr>
+</tbody>
+</table>
+<p>可以看到原本的两个字符，在java中变成了六个字符;原本的六个字节，在java中变成了12个字节。</p>
+<h4 id="Java内码转换成ISO8859-1编码"><a href="#Java内码转换成ISO8859-1编码" class="headerlink" title="Java内码转换成ISO8859-1编码"></a>Java内码转换成ISO8859-1编码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">req.getParameter(<span class="string">"name"</span>).getBytes(<span class="string">"iso8859-1"</span>)</div></pre></td></tr></table></figure>
+<p><code>getBytes(“iso8859-1”)</code>这个方法，也就是把<code>utf-16</code>转换成<code>ISO8859-1</code>。有第三步(ISO8859-1转java内码)中的对应表格可以看到，<code>utf-16</code>转<code>ISO8859-1</code>只需要把每个字符前面的8位0去掉就可以了，转换成功后俩个字符就又变成了<code>0xE4B8ADE59BBD</code>。虽然两次转换过程中，对字节的解释是错误的，但是并没有丢失原始字节信息。</p>
+<h4 id="把字节数组当成utf-8编码转java内码"><a href="#把字节数组当成utf-8编码转java内码" class="headerlink" title="把字节数组当成utf-8编码转java内码"></a>把字节数组当成utf-8编码转java内码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">new</span> String(<span class="number">0xE4B8ADE59BBD</span>,<span class="string">"utf-8"</span>)</div></pre></td></tr></table></figure>
+<p>因为字节数组本来就是utf-8编码，所以按照utf-8来转码肯定是没问题的，转换成功后的对应关系是这一样的：</p>
+<table>
+<thead>
+<tr>
+<th>UTF-8</th>
+<th>0xE4B8AD</th>
+<th>0xE59BBD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UTF-16</td>
+<td>0x4E2D</td>
+<td>0x56FD</td>
+</tr>
+</tbody>
+</table>
+<p>到这里[中国]这两个字符在java内部才得到了正确的表示。 </p>
+<h4 id="Java内码转输出编码"><a href="#Java内码转输出编码" class="headerlink" title="Java内码转输出编码"></a>Java内码转输出编码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">System.out.println(<span class="string">"中国"</span>)</div></pre></td></tr></table></figure>
+<p>现在[中国]这两个字符在java内部用<code>utf-16</code>得到了正确的表示，剩下的最后一步就是对外输出，也就是对外翻译的过程，我们这里用的java自带的<code>println</code>方法，这个方法会根据当前平台的自身编码进行输出，比如你的平台环境是中文，那输出的可能就是<code>GBK</code>编码。</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Unicode和UTF-8字符编码]]></title>
       <url>http://zsr.github.io/2017/10/25/Unicode%E5%92%8CUTF-8%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/</url>
       <content type="html"><![CDATA[<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><ul>
 <li><p><strong>Unicode: </strong>(<code>Universal Code</code> 统一码)是一个囊括了世界上所有字符的字符集，其中每一个字符都对应有唯一的编码值（<code>code point</code>），然而它并不是一种什么编码格式，仅仅是字符集而已</p>
 <p><code>Unicode</code> 字符不管具体怎么编码和存储，可以用 <code>UTF-8</code>、<code>UTF-16</code>来编码</p>
-<p><code>UTF-16</code> 的优点是在计算字符串长度，执行索引操作时速度会很快，Java 内部使用<code>UTF-16</code>编码方案</p>
+<p><code>UTF-16</code> 表示字符非常方便，每两个字节表示一个字符，这个在字符串操作时就大大简化了操作，这也是 Java 以 <code>UTF-16</code> 作为内存的字符存储格式的一个很重要的原因</p>
 </li>
 <li><p><strong>UTF-8:</strong> (<code>Unicode Transformation Format</code>)就是在互联网上使用最广的一种<code>Unicode</code>的实现方式(怎么编码，怎么存储)。其他实现方式还包括<code>UTF-16</code>（字符用两个字节或四个字节表示）和<code>UTF-32</code> (字符用四个字节表示）</p>
 <p><code>UTF-8</code>最大的一个特点，就是它是一种变长的编码方式。它可以使用1~4个字节表示一个符号，根据不同的符号而变化字节长度</p>
@@ -90,15 +215,21 @@
       <content type="html"><![CDATA[<h3 id="Spring-事件框架"><a href="#Spring-事件框架" class="headerlink" title="Spring 事件框架"></a>Spring 事件框架</h3><p><code>Spring</code>事件框架包含三个部件：</p>
 <ul>
 <li>事件：<code>ApplicationEvent</code></li>
-<li>事件监听器：<code>ApplicationListener</code>，对监听到的事件进行处理。</li>
-<li>事件广播器：<code>ApplicationEventMulticaster</code>，将<code>publish</code>的事件广播给所有的监听器。通常情况下无需自行实现，<code>Spring</code>默认提供了<code>SimpleApplicationEventMulticaster</code>。</li>
+<li>事件监听器：<code>ApplicationListener</code>，对监听到的事件进行处理</li>
+<li>事件发布：<code>ApplicationEventPublisher</code>，<code>ApplicationContext</code>继承了该接口，在<code>ApplicationContext</code>的抽象实现类<code>AbstractApplicationContext</code>中做了实现</li>
 </ul>
-<h3 id="Spring提供的事件类型"><a href="#Spring提供的事件类型" class="headerlink" title="Spring提供的事件类型"></a>Spring提供的事件类型</h3><ul>
+<h4 id="Spring提供的事件类型"><a href="#Spring提供的事件类型" class="headerlink" title="Spring提供的事件类型"></a>Spring提供的事件类型</h4><p><img src="http://dl2.iteye.com/upload/attachment/0086/6532/8637476c-9877-3432-ae82-e85745f27cc3.png" alt="img"></p>
+<ul>
 <li><code>ContextStartedEvent</code>：<code>ApplicationContext</code>启动后触发的事件；</li>
 <li><code>ContextStoppedEvent</code>：<code>ApplicationContext</code>停止后触发的事件；</li>
 <li><code>ContextRefreshedEvent</code>：<code>ApplicationContext</code>初始化或刷新完成后触发的事件；（容器初始化完成后调用）</li>
 <li><code>ContextClosedEvent</code>：<code>ApplicationContext</code>关闭后触发的事件；（如web容器关闭时自动会触发spring容器的关闭)</li>
 </ul>
+<h4 id="事件发布者"><a href="#事件发布者" class="headerlink" title="事件发布者"></a>事件发布者</h4><p><code>ApplicationContext</code>接口继承了<code>ApplicationEventPublisher</code>，并在<code>AbstractApplicationContext</code>实现了具体代码，实际执行是委托给<code>ApplicationEventMulticaster</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">publishEvent</span><span class="params">(ApplicationEvent event)</span> </span>&#123;  </div><div class="line">    <span class="comment">//省略部分代码  </span></div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 事件发布委托给ApplicationEventMulticaster来执行</span></div><div class="line">    getApplicationEventMulticaster().multicastEvent(event);  </div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.parent != <span class="keyword">null</span>) &#123;  </div><div class="line">        <span class="keyword">this</span>.parent.publishEvent(event);  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>常用的<code>ApplicationContext</code>都继承自<code>AbstractApplicationContext</code>，如<code>ClassPathXmlApplicationContext</code>、<code>XmlWebApplicationContext</code>等，自动拥有这个功能</p>
+<p>ApplicationContext自动到本地容器里找一个名字为”“的ApplicationEventMulticaster实现，如果没有自己new一个SimpleApplicationEventMulticaster。其中SimpleApplicationEventMulticaster发布事件的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">multicastEvent</span><span class="params">(<span class="keyword">final</span> ApplicationEvent event)</span> </span>&#123;</div><div class="line">    <span class="comment">//获得监听器集合，遍历监听器，可支持同步和异步的广播事件</span></div><div class="line">    <span class="keyword">for</span> (<span class="keyword">final</span> ApplicationListener listener : getApplicationListeners(event)) &#123;  </div><div class="line">        Executor executor = getTaskExecutor();  </div><div class="line">        <span class="keyword">if</span> (executor != <span class="keyword">null</span>) &#123;  </div><div class="line">            executor.execute(<span class="keyword">new</span> Runnable() &#123;  </div><div class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;  </div><div class="line">                    listener.onApplicationEvent(event);  </div><div class="line">                &#125;  </div><div class="line">            &#125;);  </div><div class="line">        &#125;  </div><div class="line">        <span class="keyword">else</span> &#123;  </div><div class="line">            listener.onApplicationEvent(event);  </div><div class="line">        &#125;  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
 ]]></content>
     </entry>
     
