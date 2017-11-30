@@ -15,6 +15,7 @@
 <li>将切面配置到xml中，也可以使用自动扫描Bean的方式，这样切面bean交由<code>Spring IOC</code>容器管理。 </li>
 </ol>
 <p>注意：<code>Spring</code>只是使用了和 <code>AspectJ</code> 一样的注解，底层依然使用的是 <code>Spring AOP</code>，依然是在运行时动态生成代理</p>
+<a id="more"></a>
 <ul>
 <li>依赖jar包</li>
 </ul>
