@@ -1,1 +1,1213 @@
-<!doctype html><html class="theme-next pisces use-motion"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css"><link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css"><meta name="keywords" content="Hexo, NexT"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1"><meta name="description" content="Develop Notes"><meta property="og:type" content="website"><meta property="og:title" content="Hello Coder"><meta property="og:url" content="http://zsr.github.io/page/8/index.html"><meta property="og:site_name" content="Hello Coder"><meta property="og:description" content="Develop Notes"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Hello Coder"><meta name="twitter:description" content="Develop Notes"><script type="text/javascript" id="hexo.configuration">var NexT=window.NexT||{},CONFIG={scheme:"Pisces",sidebar:{position:"left",display:"post"},fancybox:!0,motion:!0,duoshuo:{userId:0,author:"博主"}}</script><link rel="canonical" href="http://zsr.github.io/page/8/"><title> Hello Coder</title></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans"><script>!function(e,a,t,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=a.createElement(t),s=a.getElementsByTagName(t)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-81477846-1","auto"),ga("send","pageview")</script><div class="container one-collumn sidebar-position-left page-home"><div class="headband"></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Hello Coder</span><span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"> <button><span class="btn-bar"></span><span class="btn-bar"></span><span class="btn-bar"></span></button></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br> 首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br> 归档</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br> 标签</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br> 搜索</a></li></ul><div class="site-search"><div class="popup"><span class="search-icon fa fa-search"></span> <input type="text" id="local-search-input"><div id="local-search-result"></div> <span class="popup-btn-close">close</span></div></div></nav></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><section id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2017/05/08/Spring-bean-初始化顺序/" itemprop="url">init-method、@PostConstruct、afterPropertiesSet孰先孰后</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2017-05-08T15:37:14+08:00" content="2017-05-08">2017-05-08</time></span></div></header><div class="post-body" itemprop="articleBody"><p>Spring 允许在 Bean 在初始化完成后以及 Bean 销毁前执行特定的操作，常用的设定方式有以下三种：</p><ul><li>通过实现 <code>InitializingBean/DisposableBean</code> 接口来定制初始化之后/销毁之前的操作方法；</li><li>通过<code>&lt;bean&gt;</code> 元素的<code>init-method/destroy-method</code>属性指定初始化之后 /销毁之前调用的操作方法；</li><li>在指定方法上加上<code>@PostConstruct/@PreDestroy</code>注解来制定该方法是在初始化之后还是销毁之前调用。</li></ul><p>这三种方式是完全等同的吗，孰先孰后？</p><h3 id="演示"><a href="#演示" class="headerlink" title="演示"></a>演示</h3><p>编写一个简单的测试代码：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitSequenceBean</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span> </span>&#123;  </div><div class="line">   </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">InitSequenceBean</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: constructor"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="meta">@PostConstruct</span>  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postConstruct</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: postConstruct"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initMethod</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: init-method"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="meta">@Override</span>  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: afterPropertiesSet"</span>);  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure><p>并且在配置文件中添加如下Bean定义：</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"InitSequenceBean"</span> <span class="attr">init-method</span>=<span class="string">"initMethod"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div></pre></td></tr></table></figure><p>启动Spring容器，观察输出结果，就可知道三者的先后顺序了：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">InitSequenceBean: constructor</div><div class="line">InitSequenceBean: postConstruct</div><div class="line">InitSequenceBean: afterPropertiesSet</div><div class="line">InitSequenceBean: init-method</div></pre></td></tr></table></figure><p>通过上述输出结果，三者的先后顺序也就一目了然了：</p><p><strong><code>Constructor</code> &gt; <code>@PostConstruct</code> &gt; <code>InitializingBean</code> &gt; <code>init-method</code></strong></p><p><code>PostConstruct</code>为何率先于<code>InitializingBean</code>执行呢？</p><h3 id="CommonAnnotationBeanPostProcessor"><a href="#CommonAnnotationBeanPostProcessor" class="headerlink" title="CommonAnnotationBeanPostProcessor"></a>CommonAnnotationBeanPostProcessor</h3><p>通过Debug并查看调用栈，发现了这个类<code>org.springframework.context.annotation.CommonAnnotationBeanPostProcessor</code>，从命名上，我们就可以得到某些信息—这是一个<code>BeanPostProcessor</code>。<code>BeanPostProcessor</code>的<code>postProcessBeforeInitialization</code>是在Bean生命周期中<code>afterPropertiesSet</code>和<code>init-method</code>之前执被调用的。</p><p><code>CommonAnnotationBeanPostProcessor</code>这个类，继承自<code>InitDestroyAnnotationBeanPostProcessor</code>。<code>InitDestroyAnnotationBeanPostProcessor</code>顾名思义，就是在Bean初始化和销毁的时候所作的一个前置/后置处理器。</p><p>查看<code>InitDestroyAnnotationBeanPostProcessor</code>类下的<code>postProcessBeforeInitialization</code>方法：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">postProcessBeforeInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;  </div><div class="line">       LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());  </div><div class="line">       <span class="keyword">try</span> &#123;  </div><div class="line">           metadata.invokeInitMethods(bean, beanName);  </div><div class="line">       &#125;  </div><div class="line">       <span class="keyword">catch</span> (InvocationTargetException ex) &#123;  </div><div class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">"Invocation of init method failed"</span>, ex.getTargetException());  </div><div class="line">       &#125;  </div><div class="line">       <span class="keyword">catch</span> (Throwable ex) &#123;  </div><div class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">"Couldn't invoke init method"</span>, ex);  </div><div class="line">       &#125;  </div><div class="line">        <span class="keyword">return</span> bean;  </div><div class="line">    &#125;</div></pre></td></tr></table></figure><p>查看<code>findLifecycleMetadata</code>方法，继而我们跟踪到<code>buildLifecycleMetadata</code>这个方法体中，看下<code>buildLifecycleMetadata</code>这个方法体的内容：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> LifecycleMetadata <span class="title">buildLifecycleMetadata</span><span class="params">(<span class="keyword">final</span> Class clazz)</span> </span>&#123;  </div><div class="line">       <span class="keyword">final</span> LifecycleMetadata newMetadata = <span class="keyword">new</span> LifecycleMetadata();  </div><div class="line">       <span class="keyword">final</span> <span class="keyword">boolean</span> debug = logger.isDebugEnabled();  </div><div class="line">       ReflectionUtils.doWithMethods(clazz, <span class="keyword">new</span> ReflectionUtils.MethodCallback() &#123;  </div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doWith</span><span class="params">(Method method)</span> </span>&#123;  </div><div class="line">              <span class="keyword">if</span> (initAnnotationType != <span class="keyword">null</span>) &#123;  </div><div class="line">                  <span class="keyword">if</span> (method.getAnnotation(initAnnotationType) != <span class="keyword">null</span>) &#123;  </div><div class="line">                     newMetadata.addInitMethod(method);  </div><div class="line">                     <span class="keyword">if</span> (debug) &#123;  </div><div class="line">                         logger.debug(<span class="string">"Found init method on class ["</span> + clazz.getName() + <span class="string">"]: "</span> + method);  </div><div class="line">                     &#125;  </div><div class="line">                  &#125;  </div><div class="line">              &#125;  </div><div class="line">              <span class="keyword">if</span> (destroyAnnotationType != <span class="keyword">null</span>) &#123;  </div><div class="line">                  <span class="keyword">if</span> (method.getAnnotation(destroyAnnotationType) != <span class="keyword">null</span>) &#123;  </div><div class="line">                     newMetadata.addDestroyMethod(method);  </div><div class="line">                     <span class="keyword">if</span> (debug) &#123;  </div><div class="line">                         logger.debug(<span class="string">"Found destroy method on class ["</span> + clazz.getName() + <span class="string">"]: "</span> + method);  </div><div class="line">                     &#125;  </div><div class="line">                  &#125;  </div><div class="line">              &#125;  </div><div class="line">           &#125;  </div><div class="line">       &#125;);  </div><div class="line">       <span class="keyword">return</span> newMetadata;  </div><div class="line">&#125;</div></pre></td></tr></table></figure><p>在这里会去判断某方法有没有被<code>initAnnotationType/destroyAnnotationType</code>注释，如果有，则添加到init/destroy队列中，后续一一执行。</p><p><code>initAnnotationType/destroyAnnotationType</code>注释是什么?我们在<code>CommonAnnotationBeanPostProcessor</code>的构造函数中看到下面这段代码：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">CommonAnnotationBeanPostProcessor</span><span class="params">()</span> </span>&#123;  </div><div class="line">       setOrder(Ordered.LOWEST_PRECEDENCE - <span class="number">3</span>);  </div><div class="line">       setInitAnnotationType(PostConstruct.class);  </div><div class="line">       setDestroyAnnotationType(PreDestroy.class);  </div><div class="line">       ignoreResourceType(<span class="string">"javax.xml.ws.WebServiceContext"</span>);  </div><div class="line">&#125;</div></pre></td></tr></table></figure><p>一言以蔽之，<code>@PostConstruct</code>注解后的方法在<code>BeanPostProcessor</code>前置处理器中就被执行了，所以当然要先于<code>InitializingBean</code>和<code>init-method</code>执行了。</p><h3 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h3><p><a href="http://sexycoding.iteye.com/blog/1046993" target="_blank" rel="external">源码解析：init-method、@PostConstruct、afterPropertiesSet孰先孰后</a></p></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2017/05/05/Spring-Bean-生命周期/" itemprop="url">Spring Bean 生命周期</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2017-05-05T16:43:23+08:00" content="2017-05-05">2017-05-05</time></span></div></header><div class="post-body" itemprop="articleBody"><h1 id="Spring-Bean-生命周期"><a href="#Spring-Bean-生命周期" class="headerlink" title="Spring Bean 生命周期"></a>Spring Bean 生命周期</h1><hr><p><code>BeanFactory</code>和<code>ApplicationContext</code>是<code>Spring</code>两种很重要的容器,前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播，资源访问和国际化的消息访问等功能。</p><p>概括来说主要有四个阶段：实例化，初始化，使用，销毁。</p><h3 id="Bean-作用范围"><a href="#Bean-作用范围" class="headerlink" title="Bean 作用范围"></a>Bean 作用范围</h3><p>常用的<code>Bean</code>作用范围：<code>singleton</code>和<code>prototype</code></p><ul><li><code>singleton</code></li></ul><p>在默认情况下,<code>Spring</code>的<code>ApplicationContext</code>容器在启动时,自动实例化所有<code>singleton</code>的<code>Bean</code>并缓存于容器中.虽然启动时会花费一些时间,但带来两个好处:首先对<code>Bean</code>提前的实例化操作会及早发现一些潜在的配置问题.其次<code>Bean</code>以缓存的方式保存,当运行时使用到该<code>Bean</code>时就无须再实例化了,加快了运行效率.如果用户不希望在容器启动时提前实例化<code>singleton</code>的<code>Bean</code>,可以通过<code>lazy-init</code>属性进行控制.</p><ul><li><code>prototype</code></li></ul><p>在默认情况下,<code>Spring</code>容器在启动时不实例化<code>prototype</code>的<code>Bean</code>.此外,<code>Spring</code>容器将<code>prototype</code>的<code>Bean</code>交给调用者后,就不再管理它的生命周期.</p><h3 id="ApplicationContext-Bean生命周期："><a href="#ApplicationContext-Bean生命周期：" class="headerlink" title="ApplicationContext Bean生命周期："></a>ApplicationContext Bean生命周期：</h3><p><code>Spring Bean</code>的完整生命周期从创建<code>Spring</code>容器开始，直到最终<code>Spring</code>容器销毁<code>Bean</code>，这其中包含了一系列关键点。</p><h4 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h4><p><img src="http://xfhnever.com/images/post/spring5-2.jpg" alt="img"></p><p>若容器注册了以上各种接口，程序那么将会按照以上的流程进行。下面将仔细讲解各接口作用。</p><div class="post-more-link text-center"> <a class="btn" href="/2017/05/05/Spring-Bean-生命周期/#more" rel="contents">阅读全文 &raquo;</a></div></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2017/05/03/ThreadPoolExecutor/" itemprop="url">ThreadPoolExecutor</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2017-05-03T19:29:16+08:00" content="2017-05-03">2017-05-03</time></span></div></header><div class="post-body" itemprop="articleBody"><h1 id="ThreadPoolExecutor线程池-实现原理"><a href="#ThreadPoolExecutor线程池-实现原理" class="headerlink" title="ThreadPoolExecutor线程池 实现原理"></a>ThreadPoolExecutor线程池 实现原理</h1><hr><h3 id="类结构"><a href="#类结构" class="headerlink" title="类结构"></a>类结构</h3><p>首先要先了解一下类结构，如下图：</p><p><img src="http://kael-aiur.com/static/img/blog/java-thread-pool/images/class_struts.png" alt="enter description here"></p><ul><li><code>Executor</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure><p>只有一个接口，传入一个<code>Runnable</code>对象，线程池就会帮你执行这个指令。</p><ul><li><code>ExecutorService</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ExecutorService</span> <span class="keyword">extends</span> <span class="title">Executor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">shutdown</span><span class="params">()</span></span>;</div><div class="line">    <span class="function">List&lt;Runnable&gt; <span class="title">shutdownNow</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isShutdown</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isTerminated</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">awaitTermination</span><span class="params">(<span class="keyword">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException</span>;</div><div class="line">    &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span></span>;</div><div class="line">    &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Runnable task, T result)</span></span>;</div><div class="line"> </div><div class="line">    .......省略........</div><div class="line">&#125;</div></pre></td></tr></table></figure><p>这个接口是执行器服务接口，声明了关于执行器的许多管理方法。</p><ul><li><code>AbstractExecutorService</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractExecutorService</span> <span class="keyword">implements</span> <span class="title">ExecutorService</span> </span>&#123;</div><div class="line">  </div><div class="line">  .......省略........</div><div class="line">    </div><div class="line">    <span class="keyword">public</span> Future&lt;?&gt; submit(Runnable task) &#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;Void&gt; ftask = newTaskFor(task, <span class="keyword">null</span>);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Runnable task, T result)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;T&gt; ftask = newTaskFor(task, result);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;T&gt; ftask = newTaskFor(task);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line"> .......省略........</div><div class="line">&#125;</div></pre></td></tr></table></figure><p>这个抽象类实现了<code>ExecutorService</code>接口中的大部分方法，不过大部分的实现都依赖于<code>Executor</code>接口声明的<code>execute</code>方法，而这里并没有实现这个关键的方法，而是把这个方法的实现交给了子类，也就是<code>java.util.concurrent.ThreadPoolExecutor</code>来实现了。</p><div class="post-more-link text-center"> <a class="btn" href="/2017/05/03/ThreadPoolExecutor/#more" rel="contents">阅读全文 &raquo;</a></div></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2017/04/27/LinkedHashMap/" itemprop="url">LinkedHashMap</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2017-04-27T10:34:21+08:00" content="2017-04-27">2017-04-27</time></span></div></header><div class="post-body" itemprop="articleBody"><h1 id="LinkedHashMap-源码阅读"><a href="#LinkedHashMap-源码阅读" class="headerlink" title="LinkedHashMap 源码阅读"></a>LinkedHashMap 源码阅读</h1><hr><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><ul><li>类继承关系</li></ul><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public class LinkedHashMap&lt;K,V&gt;</div><div class="line">       extends HashMap&lt;K,V&gt;</div><div class="line">       implements Map&lt;K,V&gt;</div></pre></td></tr></table></figure><p><code>LinkedHashMap</code>继承自<code>HashMap</code></p><ul><li>核心成员变量</li></ul><p>jdk 7:(下文都是该环境)</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * The head of the doubly linked list.</div><div class="line"> */</div><div class="line"><span class="keyword">private</span> <span class="keyword">transient</span> Entry&lt;K,V&gt; header;   <span class="comment">//链表头结点</span></div><div class="line"></div><div class="line"><span class="keyword">final</span> <span class="keyword">boolean</span> accessOrder;   <span class="comment">//按元素插入顺序(默认)或元素最近访问顺序(LRU)排列</span></div></pre></td></tr></table></figure><p>jdk 8:</p><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; head;   <span class="comment">//链表头结点</span></div><div class="line"></div><div class="line"><span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; tail;  <span class="comment">//链表尾节点</span></div><div class="line"></div><div class="line"><span class="keyword">final</span> <span class="keyword">boolean</span> accessOrder;</div></pre></td></tr></table></figure><p>jdk 8中新增了一个<code>链表尾节点</code></p><ul><li>特点</li></ul><p>一般来说，如果需要使用的Map中的key无序，选择<code>HashMap</code>；如果要求key有序，则选择<code>TreeMap</code>。<br>但是选择<code>TreeMap</code>就会有性能问题，因为<code>TreeMap</code>的get操作的时间复杂度是<code>O(log(n))</code>的，相比于<code>HashMap</code>的<code>O(1)</code>还是差不少的，<code>LinkedHashMap</code>的出现就是为了平衡这些因素，使得</p><blockquote><p>能够以<code>O(1)</code>时间复杂度增加查找元素，又能够保证key的有序性</p></blockquote><p>此外，<code>LinkedHashMap</code>提供了两种key的顺序：</p><blockquote><p>访问顺序（access order）：非常实用，可以使用这种顺序实现LRU（Least Recently Used）缓存</p><p>插入顺序（insertion orde）：同一key的多次插入，并不会影响其顺序</p></blockquote><div class="post-more-link text-center"> <a class="btn" href="/2017/04/27/LinkedHashMap/#more" rel="contents">阅读全文 &raquo;</a></div></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2017/04/12/spring-rabbit配置多connect-factory/" itemprop="url">spring-rabbit配置多connect-factory</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2017-04-12T22:04:42+08:00" content="2017-04-12">2017-04-12</time></span></div></header><div class="post-body" itemprop="articleBody"><p><strong>多connect-factory时配置exchange， queue需使用declared-by</strong></p><h3 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h3><p>项目中需要监听多个<code>rabbitmq</code>服务器或者发消息到多个<code>rabbitmq</code>服务器，项目启动报错。结果如下：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Caused by: com.rabbitmq.client.ShutdownSignalException: channel error; protocol method: #method&lt;channel.close&gt;(reply-code=406, reply-text=PRECONDITION_FAILED - cannot redeclare exchange &apos;lamia.live.start&apos; in vhost &apos;/&apos; with different type, durable, internal or autodelete value, class-id=40, method-id=10)</div><div class="line">at com.rabbitmq.client.impl.ChannelN.asyncShutdown(ChannelN.java:478)</div><div class="line">at com.rabbitmq.client.impl.ChannelN.processAsync(ChannelN.java:315)</div><div class="line">at com.rabbitmq.client.impl.AMQChannel.handleCompleteInboundCommand(AMQChannel.java:144)</div><div class="line">at com.rabbitmq.client.impl.AMQChannel.handleFrame(AMQChannel.java:91)</div><div class="line">at com.rabbitmq.client.impl.AMQConnection$MainLoop.run(AMQConnection.java:550)</div><div class="line">... 1 more</div></pre></td></tr></table></figure><p>问题原因：从错误来看，大概意思是重复声明了“exchange”。研究了下spring-rabbit中“exchange”的配置。</p><h3 id="基本信息："><a href="#基本信息：" class="headerlink" title="基本信息："></a>基本信息：</h3><p><code>Broker</code>：简单来说就是消息队列服务器实体，可以把一个rabbitmq server当作一个broker。</p><p><code>vhost</code>虚拟主机：一个broker里可以开设多个vhost，用作不同用户的权限分离，也可以把他看作明名空间。vhost之间相互完全隔离，不同Vhost之间无法共享Exchange和Queue。(如果不指定vhost,默认是”/“)</p><p><code>Exchange</code>：Exchange是属于Vhost的。同一个vhost不能有重复的Exchange名称(这个就是错误原因)。</p><p><code>Channel</code>：消息通道，在客户端的每个连接里，可建立多个channel，每个channel代表一个会话任务。</p><div class="post-more-link text-center"> <a class="btn" href="/2017/04/12/spring-rabbit配置多connect-factory/#more" rel="contents">阅读全文 &raquo;</a></div></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article></section><nav class="pagination"><a class="extend prev" rel="prev" href="/page/7/"><i class="fa fa-angle-left"></i></a> <a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/9/"><i class="fa fa-angle-right"></i></a></nav></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span><span class="sidebar-toggle-line sidebar-toggle-line-middle"></span><span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div class="sidebar-inner"><section class="site-overview sidebar-panel sidebar-panel-active"><div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person"> <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="David"><p class="site-author-name" itemprop="name">David</p><p class="site-description motion-element" itemprop="description">Develop Notes</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"> <a href="/archives"><span class="site-state-item-count">123</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-tags"> <a href="/tags"><span class="site-state-item-count">34</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="links-of-author motion-element"><span class="links-of-author-item"><a href="https://github.com/zsr" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i> GitHub</a></span><span class="links-of-author-item"><a href="http://weibo.com/u/2214956781" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i> Weibo</a></span></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright"> &copy; 2016 - <span itemprop="copyrightYear">2017</span><span class="with-love"><i class="fa fa-heart"></i></span> <span class="author" itemprop="copyrightHolder">David</span></div><div class="powered-by"> 由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div><div class="theme-info"> 主题 - <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a></div></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script><script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script><script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script><script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script><script type="text/javascript">function proceedsearch(){$("body").append('<div class="popoverlay">').css("overflow","hidden"),$(".popup").toggle()}var isfetched=!1,search_path="search.xml";0==search_path.length&&(search_path="search.xml");var path="/"+search_path,searchFunc=function(e,t,a){"use strict";$.ajax({url:e,dataType:"xml",async:!0,success:function(e){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var r=$("entry",e).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get(),c=document.getElementById(t),s=document.getElementById(a);c.addEventListener("input",function(){var e=0,t='<ul class="search-result-list">',a=this.value.trim().toLowerCase().split(/[\s\-]+/);s.innerHTML="",this.value.trim().length>1&&r.forEach(function(r){var c=!0,s=r.title.trim().toLowerCase(),n=r.content.trim().replace(/<[^>]+>/g,"").toLowerCase(),i=r.url,o=-1,l=-1,p=-1;if(""!=s&&""!=n&&a.forEach(function(e,t){o=s.indexOf(e),l=n.indexOf(e),o<0&&l<0?c=!1:(l<0&&(l=0),0==t&&(p=l))}),c){e+=1,t+="<li><a href='"+i+"' class='search-result-title'>"+s+"</a>";var h=r.content.trim().replace(/<[^>]+>/g,"");if(p>=0){var u=p-20,d=p+80;u<0&&(u=0),0==u&&(d=50),d>h.length&&(d=h.length);var f=h.substring(u,d);a.forEach(function(e){var t=new RegExp(e,"gi");f=f.replace(t,'<b class="search-keyword">'+e+"</b>")}),t+='<p class="search-result">'+f+"...</p>"}t+="</li>"}}),t+="</ul>",0==e&&(t='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'),""==a&&(t='<div id="no-result"><i class="fa fa-search fa-5x" /></div>'),s.innerHTML=t}),proceedsearch()}})};$(".popup-trigger").click(function(e){e.stopPropagation(),0==isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(function(e){$(".popup").hide(),$(".popoverlay").remove(),$("body").css("overflow","")}),$(".popup").click(function(e){e.stopPropagation()})</script></body></html>
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Develop Notes">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hello Coder">
+<meta property="og:url" content="http://zsr.github.io/page/8/index.html">
+<meta property="og:site_name" content="Hello Coder">
+<meta property="og:description" content="Develop Notes">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hello Coder">
+<meta name="twitter:description" content="Develop Notes">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://zsr.github.io/page/8/"/>
+
+  <title> Hello Coder </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-81477846-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left 
+   page-home 
+ ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Hello Coder</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/05/08/Spring-MVC-应用上下文/" itemprop="url">
+                  Spring MVC 应用上下文
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-08T17:55:35+08:00" content="2017-05-08">
+              2017-05-08
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>先看上文：<a href="https://zsr.github.io/2016/08/16/ApplicationContext/">Spring MVC ApplicationContext</a></p>
+<h3 id="ServletContext"><a href="#ServletContext" class="headerlink" title="ServletContext"></a>ServletContext</h3><p><code>javaee</code>标准规定了，<code>servlet</code>容器需要在应用项目启动时，给应用项目初始化一个<code>ServletContext</code>作为公共环境容器存放公共信息。<code>ServletContext</code>中的信息都是由容器提供的。</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>通过自定义<code>contextListener</code>获取<code>web.xml</code>中配置的参数</p>
+<ol>
+<li>容器启动时，找到配置文件中的<code>context-param</code>作为键值对放到<code>ServletContext</code>中</li>
+<li>然后找到<code>listener</code>，容器调用它的<code>contextInitialized(ServletContextEvent event)</code>方法，执行其中的操作</li>
+</ol>
+<p>例如：在web.xml中配置</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>key<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>hello<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span> </div><div class="line">   <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>com.zsr.contextlistener.listener.ContextListenerTest<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>配置好之后，在该类中获取对应的参数信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.contextlistener.listener;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContext;</div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContextEvent;</div><div class="line"><span class="keyword">import</span> javax.servlet.ServletContextListener;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ContextListenerTest</span> <span class="keyword">implements</span> <span class="title">ServletContextListener</span> </span>&#123;</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextDestroyed</span><span class="params">(ServletContextEvent event)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"*************destroy ContextListener*************"</span>);</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unused"</span>)</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextInitialized</span><span class="params">(ServletContextEvent event)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"*************init ContextListener*************"</span>);</div><div class="line">        ServletContext servletContext = event.getServletContext();</div><div class="line">        System.out.println(<span class="string">"key:"</span>+servletContext.getInitParameter(<span class="string">"key"</span>));</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h4><p>　　<strong><code>web.xml</code>在<code>&lt;context-param&gt;&lt;/context-param&gt;</code>标签中声明<code>应用范围内</code>的初始化参数</strong></p>
+<ol>
+<li>启动一个WEB项目的时候,容器(如:<code>Tomcat</code>)会去读它的配置文件<code>web.xml</code>.读两个节点: <code>&lt;listener&gt;&lt;/listener&gt;</code>和 <code>&lt;context-param&gt;&lt;/context-param&gt;</code></li>
+<li>紧接着,容器创建一个<code>ServletContext</code>(上下文)。在该应用内全局共享。</li>
+<li>容器将<code>&lt;context-param&gt;&lt;/context-param&gt;</code>转化为键值对,并交给<code>ServletContext</code>.</li>
+<li>容器创建<code>&lt;listener&gt;&lt;/listener&gt;</code>中的类实例,即创建监听.该监听器必须实现自<strong><code>ServletContextListener</code></strong>接口</li>
+<li>在监听中会有<code>contextInitialized(ServletContextEvent event)</code>初始化方法</li>
+<li>得到这个<code>context-param</code>的值之后,你就可以做一些操作了.注意,这个时候你的WEB项目还没有完全启动完成.这个动作会比所有的Servlet都要早.换句话说,这个时候,<strong>对<code>&lt;context-param&gt;</code>中的键值做的操作,将在你的WEB项目完全启动之前被执行</strong>.</li>
+</ol>
+<p><code>web.xml</code>中可以定义两种参数：</p>
+<ul>
+<li>全局参数(<code>ServletContext</code>)，通过<code>&lt;context-param&gt;</code>声明</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>key<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>hello<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div></pre></td></tr></table></figure>
+<p> 参数在<code>servlet</code>里面可以通过<code>getServletContext().getInitParameter(&quot;key&quot;)</code>得到</p>
+<ul>
+<li><p><code>servlet</code>参数，通过在<code>servlet</code>中声明    　　 </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">init-param</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>param1<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>avalible in servlet init()<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span>   </div><div class="line"><span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>参数只能在<code>servlet</code>的<code>init()</code>方法中通过<code>this.getInitParameter(&quot;param1&quot;)</code>取得</p>
+<h3 id="Spring上下文容器配置"><a href="#Spring上下文容器配置" class="headerlink" title="Spring上下文容器配置"></a>Spring上下文容器配置</h3><p>　Spring提供了实现<code>ServletContextListener</code>接口的上下文初始化监听器：<code>org.springframework.web.context.ContextLoaderListener</code></p>
+<p>   Spring为我们提供的IOC容器，需要我们指定容器的配置文件，然后由该监听器初始化并创建该容器。要求你指定配置文件的地址及文件名称，一定要使用：<code>contextConfigLocation</code>作为参数名称。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>contextConfigLocation<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>classpath:web-context.xml<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>org.springframework.web.context.ContextLoaderListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>该监听器，默认读取<code>/WEB-INF/</code>下的<code>web-context.xml</code>文件。但是通过<code>context-param</code>指定配置文件路径后，便会去你指定的路径下读取对应的配置文件，并进行初始化。</p>
+<h4 id="执行流程-1"><a href="#执行流程-1" class="headerlink" title="执行流程"></a>执行流程</h4><p><code>ServletContext</code>是由<code>Servlet</code>容器初始化的，那Spring的<code>ContextLoaderListener</code>又做了什么初始化呢？</p>
+<ol>
+<li><code>servlet</code>容器启动，为应用创建一个“全局上下文环境”：<code>ServletContext</code></li>
+<li>容器调用<code>web.xml</code>中配置的<code>contextLoaderListener</code>，初始化<code>WebApplicationContext</code>上下文环境（即IOC容器），加载<code>context-param</code>指定的配置文件信息到IOC容器中。<code>WebApplicationContext</code>在<code>ServletContext</code>中以键值对的形式保存</li>
+<li>容器初始化<code>web.xml</code>中配置的<code>servlet</code>，为其初始化自己的上下文信息<code>servletContext</code>，并加载其设置的配置信息到该上下文中。<strong>将WebApplicationContext设置为它的父容器。</strong></li>
+<li><p>此后的所有<code>servlet</code>的初始化都按照3步中方式创建，初始化自己的上下文环境，将<code>WebApplicationContext</code>设置为自己的父上下文环境。</p>
+<p><img src="http://images.cnitblog.com/blog/698747/201502/011528042224276.png" alt="img"></p>
+</li>
+</ol>
+<p>​       <strong>对于作用范围而言，在<code>DispatcherServlet</code>中可以引用由<code>ContextLoaderListener</code>所创建的<code>ApplicationContext</code>中的内容，而反过来不行。</strong></p>
+<p>​       当Spring在执行<code>ApplicationContext</code>的<code>getBean(BeanName)</code>时，如果在自己<code>context</code>中找不到对应的bean，则会在父<code>ApplicationContext</code>中去找。这也解释了为什么我们可以在<code>DispatcherServlet</code>中获取到由<code>ContextLoaderListener</code>对应的<code>ApplicationContext中的bean</code>。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.cnblogs.com/brolanda/p/4265597.html" target="_blank" rel="external">Spring-MVC理解之一：应用上下文webApplicationContext</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/05/08/Spring-bean-初始化顺序/" itemprop="url">
+                  init-method、@PostConstruct、afterPropertiesSet孰先孰后
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-08T15:37:14+08:00" content="2017-05-08">
+              2017-05-08
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Spring 允许在 Bean 在初始化完成后以及 Bean 销毁前执行特定的操作，常用的设定方式有以下三种：</p>
+<ul>
+<li>通过实现 <code>InitializingBean/DisposableBean</code> 接口来定制初始化之后/销毁之前的操作方法；</li>
+<li>通过<code>&lt;bean&gt;</code> 元素的<code>init-method/destroy-method</code>属性指定初始化之后 /销毁之前调用的操作方法；</li>
+<li>在指定方法上加上<code>@PostConstruct/@PreDestroy</code>注解来制定该方法是在初始化之后还是销毁之前调用。 </li>
+</ul>
+<p>这三种方式是完全等同的吗，孰先孰后？</p>
+<h3 id="演示"><a href="#演示" class="headerlink" title="演示"></a>演示</h3><p>编写一个简单的测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitSequenceBean</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span> </span>&#123;  </div><div class="line">   </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">InitSequenceBean</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: constructor"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="meta">@PostConstruct</span>  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postConstruct</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: postConstruct"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initMethod</span><span class="params">()</span> </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: init-method"</span>);  </div><div class="line">    &#125;  </div><div class="line">     </div><div class="line">    <span class="meta">@Override</span>  </div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;  </div><div class="line">       System.out.println(<span class="string">"InitSequenceBean: afterPropertiesSet"</span>);  </div><div class="line">    &#125;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>并且在配置文件中添加如下Bean定义：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"InitSequenceBean"</span> <span class="attr">init-method</span>=<span class="string">"initMethod"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>启动Spring容器，观察输出结果，就可知道三者的先后顺序了：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">InitSequenceBean: constructor</div><div class="line">InitSequenceBean: postConstruct</div><div class="line">InitSequenceBean: afterPropertiesSet</div><div class="line">InitSequenceBean: init-method</div></pre></td></tr></table></figure>
+<p>通过上述输出结果，三者的先后顺序也就一目了然了：</p>
+<p><strong><code>Constructor</code> &gt; <code>@PostConstruct</code> &gt; <code>InitializingBean</code> &gt; <code>init-method</code></strong></p>
+<p><code>PostConstruct</code>为何率先于<code>InitializingBean</code>执行呢？</p>
+<h3 id="CommonAnnotationBeanPostProcessor"><a href="#CommonAnnotationBeanPostProcessor" class="headerlink" title="CommonAnnotationBeanPostProcessor"></a>CommonAnnotationBeanPostProcessor</h3><p>通过Debug并查看调用栈，发现了这个类<code>org.springframework.context.annotation.CommonAnnotationBeanPostProcessor</code>，从命名上，我们就可以得到某些信息—这是一个<code>BeanPostProcessor</code>。<code>BeanPostProcessor</code>的<code>postProcessBeforeInitialization</code>是在Bean生命周期中<code>afterPropertiesSet</code>和<code>init-method</code>之前执被调用的。 </p>
+<p><code>CommonAnnotationBeanPostProcessor</code>这个类，继承自<code>InitDestroyAnnotationBeanPostProcessor</code>。<code>InitDestroyAnnotationBeanPostProcessor</code>顾名思义，就是在Bean初始化和销毁的时候所作的一个前置/后置处理器。</p>
+<p>查看<code>InitDestroyAnnotationBeanPostProcessor</code>类下的<code>postProcessBeforeInitialization</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">postProcessBeforeInitialization</span><span class="params">(Object bean, String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;  </div><div class="line">       LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());  </div><div class="line">       <span class="keyword">try</span> &#123;  </div><div class="line">           metadata.invokeInitMethods(bean, beanName);  </div><div class="line">       &#125;  </div><div class="line">       <span class="keyword">catch</span> (InvocationTargetException ex) &#123;  </div><div class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">"Invocation of init method failed"</span>, ex.getTargetException());  </div><div class="line">       &#125;  </div><div class="line">       <span class="keyword">catch</span> (Throwable ex) &#123;  </div><div class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(beanName, <span class="string">"Couldn't invoke init method"</span>, ex);  </div><div class="line">       &#125;  </div><div class="line">        <span class="keyword">return</span> bean;  </div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>查看<code>findLifecycleMetadata</code>方法，继而我们跟踪到<code>buildLifecycleMetadata</code>这个方法体中，看下<code>buildLifecycleMetadata</code>这个方法体的内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> LifecycleMetadata <span class="title">buildLifecycleMetadata</span><span class="params">(<span class="keyword">final</span> Class clazz)</span> </span>&#123;  </div><div class="line">       <span class="keyword">final</span> LifecycleMetadata newMetadata = <span class="keyword">new</span> LifecycleMetadata();  </div><div class="line">       <span class="keyword">final</span> <span class="keyword">boolean</span> debug = logger.isDebugEnabled();  </div><div class="line">       ReflectionUtils.doWithMethods(clazz, <span class="keyword">new</span> ReflectionUtils.MethodCallback() &#123;  </div><div class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doWith</span><span class="params">(Method method)</span> </span>&#123;  </div><div class="line">              <span class="keyword">if</span> (initAnnotationType != <span class="keyword">null</span>) &#123;  </div><div class="line">                  <span class="keyword">if</span> (method.getAnnotation(initAnnotationType) != <span class="keyword">null</span>) &#123;  </div><div class="line">                     newMetadata.addInitMethod(method);  </div><div class="line">                     <span class="keyword">if</span> (debug) &#123;  </div><div class="line">                         logger.debug(<span class="string">"Found init method on class ["</span> + clazz.getName() + <span class="string">"]: "</span> + method);  </div><div class="line">                     &#125;  </div><div class="line">                  &#125;  </div><div class="line">              &#125;  </div><div class="line">              <span class="keyword">if</span> (destroyAnnotationType != <span class="keyword">null</span>) &#123;  </div><div class="line">                  <span class="keyword">if</span> (method.getAnnotation(destroyAnnotationType) != <span class="keyword">null</span>) &#123;  </div><div class="line">                     newMetadata.addDestroyMethod(method);  </div><div class="line">                     <span class="keyword">if</span> (debug) &#123;  </div><div class="line">                         logger.debug(<span class="string">"Found destroy method on class ["</span> + clazz.getName() + <span class="string">"]: "</span> + method);  </div><div class="line">                     &#125;  </div><div class="line">                  &#125;  </div><div class="line">              &#125;  </div><div class="line">           &#125;  </div><div class="line">       &#125;);  </div><div class="line">       <span class="keyword">return</span> newMetadata;  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在这里会去判断某方法有没有被<code>initAnnotationType/destroyAnnotationType</code>注释，如果有，则添加到init/destroy队列中，后续一一执行。</p>
+<p><code>initAnnotationType/destroyAnnotationType</code>注释是什么?我们在<code>CommonAnnotationBeanPostProcessor</code>的构造函数中看到下面这段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">CommonAnnotationBeanPostProcessor</span><span class="params">()</span> </span>&#123;  </div><div class="line">       setOrder(Ordered.LOWEST_PRECEDENCE - <span class="number">3</span>);  </div><div class="line">       setInitAnnotationType(PostConstruct.class);  </div><div class="line">       setDestroyAnnotationType(PreDestroy.class);  </div><div class="line">       ignoreResourceType(<span class="string">"javax.xml.ws.WebServiceContext"</span>);  </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>一言以蔽之，<code>@PostConstruct</code>注解后的方法在<code>BeanPostProcessor</code>前置处理器中就被执行了，所以当然要先于<code>InitializingBean</code>和<code>init-method</code>执行了。</p>
+<h3 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h3><p><a href="http://sexycoding.iteye.com/blog/1046993" target="_blank" rel="external">源码解析：init-method、@PostConstruct、afterPropertiesSet孰先孰后</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/05/05/Spring-Bean-生命周期/" itemprop="url">
+                  Spring Bean 生命周期
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-05T16:43:23+08:00" content="2017-05-05">
+              2017-05-05
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="Spring-Bean-生命周期"><a href="#Spring-Bean-生命周期" class="headerlink" title="Spring Bean 生命周期"></a>Spring Bean 生命周期</h1><hr>
+<p><code>BeanFactory</code>和<code>ApplicationContext</code>是<code>Spring</code>两种很重要的容器,前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播，资源访问和国际化的消息访问等功能。</p>
+<p>概括来说主要有四个阶段：实例化，初始化，使用，销毁。</p>
+<h3 id="Bean-作用范围"><a href="#Bean-作用范围" class="headerlink" title="Bean 作用范围"></a>Bean 作用范围</h3><p>常用的<code>Bean</code>作用范围：<code>singleton</code>和<code>prototype</code></p>
+<ul>
+<li><code>singleton</code></li>
+</ul>
+<p>在默认情况下,<code>Spring</code>的<code>ApplicationContext</code>容器在启动时,自动实例化所有<code>singleton</code>的<code>Bean</code>并缓存于容器中.虽然启动时会花费一些时间,但带来两个好处:首先对<code>Bean</code>提前的实例化操作会及早发现一些潜在的配置问题.其次<code>Bean</code>以缓存的方式保存,当运行时使用到该<code>Bean</code>时就无须再实例化了,加快了运行效率.如果用户不希望在容器启动时提前实例化<code>singleton</code>的<code>Bean</code>,可以通过<code>lazy-init</code>属性进行控制.</p>
+<ul>
+<li><code>prototype</code></li>
+</ul>
+<p>在默认情况下,<code>Spring</code>容器在启动时不实例化<code>prototype</code>的<code>Bean</code>.此外,<code>Spring</code>容器将<code>prototype</code>的<code>Bean</code>交给调用者后,就不再管理它的生命周期.</p>
+<h3 id="ApplicationContext-Bean生命周期："><a href="#ApplicationContext-Bean生命周期：" class="headerlink" title="ApplicationContext Bean生命周期："></a>ApplicationContext Bean生命周期：</h3><p><code>Spring Bean</code>的完整生命周期从创建<code>Spring</code>容器开始，直到最终<code>Spring</code>容器销毁<code>Bean</code>，这其中包含了一系列关键点。</p>
+<h4 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h4><p><img src="http://xfhnever.com/images/post/spring5-2.jpg" alt="img"></p>
+<p>若容器注册了以上各种接口，程序那么将会按照以上的流程进行。下面将仔细讲解各接口作用。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/05/05/Spring-Bean-生命周期/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/05/03/ThreadPoolExecutor/" itemprop="url">
+                  ThreadPoolExecutor
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-05-03T19:29:16+08:00" content="2017-05-03">
+              2017-05-03
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="ThreadPoolExecutor线程池-实现原理"><a href="#ThreadPoolExecutor线程池-实现原理" class="headerlink" title="ThreadPoolExecutor线程池 实现原理"></a>ThreadPoolExecutor线程池 实现原理</h1><hr>
+<h3 id="类结构"><a href="#类结构" class="headerlink" title="类结构"></a>类结构</h3><p>首先要先了解一下类结构，如下图：</p>
+<p><img src="http://kael-aiur.com/static/img/blog/java-thread-pool/images/class_struts.png" alt="enter description here"></p>
+<ul>
+<li><code>Executor</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>只有一个接口，传入一个<code>Runnable</code>对象，线程池就会帮你执行这个指令。</p>
+<ul>
+<li><code>ExecutorService</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ExecutorService</span> <span class="keyword">extends</span> <span class="title">Executor</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">void</span> <span class="title">shutdown</span><span class="params">()</span></span>;</div><div class="line">    <span class="function">List&lt;Runnable&gt; <span class="title">shutdownNow</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isShutdown</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">isTerminated</span><span class="params">()</span></span>;</div><div class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">awaitTermination</span><span class="params">(<span class="keyword">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> InterruptedException</span>;</div><div class="line">    &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span></span>;</div><div class="line">    &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Runnable task, T result)</span></span>;</div><div class="line"> </div><div class="line">    .......省略........</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个接口是执行器服务接口，声明了关于执行器的许多管理方法。</p>
+<ul>
+<li><code>AbstractExecutorService</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractExecutorService</span> <span class="keyword">implements</span> <span class="title">ExecutorService</span> </span>&#123;</div><div class="line">  </div><div class="line">  .......省略........</div><div class="line">    </div><div class="line">    <span class="keyword">public</span> Future&lt;?&gt; submit(Runnable task) &#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;Void&gt; ftask = newTaskFor(task, <span class="keyword">null</span>);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Runnable task, T result)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;T&gt; ftask = newTaskFor(task, result);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">        RunnableFuture&lt;T&gt; ftask = newTaskFor(task);</div><div class="line">        execute(ftask);</div><div class="line">        <span class="keyword">return</span> ftask;</div><div class="line">    &#125;</div><div class="line">  </div><div class="line"> .......省略........</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个抽象类实现了<code>ExecutorService</code>接口中的大部分方法，不过大部分的实现都依赖于<code>Executor</code>接口声明的<code>execute</code>方法，而这里并没有实现这个关键的方法，而是把这个方法的实现交给了子类，也就是<code>java.util.concurrent.ThreadPoolExecutor</code>来实现了。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/05/03/ThreadPoolExecutor/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/04/27/LinkedHashMap/" itemprop="url">
+                  LinkedHashMap
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-04-27T10:34:21+08:00" content="2017-04-27">
+              2017-04-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="LinkedHashMap-源码阅读"><a href="#LinkedHashMap-源码阅读" class="headerlink" title="LinkedHashMap 源码阅读"></a>LinkedHashMap 源码阅读</h1><hr>
+<h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><ul>
+<li>类继承关系</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public class LinkedHashMap&lt;K,V&gt;</div><div class="line">       extends HashMap&lt;K,V&gt;</div><div class="line">       implements Map&lt;K,V&gt;</div></pre></td></tr></table></figure>
+<p><code>LinkedHashMap</code>继承自<code>HashMap</code></p>
+<ul>
+<li>核心成员变量</li>
+</ul>
+<p>jdk 7:(下文都是该环境)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</div><div class="line"> * The head of the doubly linked list.</div><div class="line"> */</span></div><div class="line"><span class="keyword">private</span> <span class="keyword">transient</span> Entry&lt;K,V&gt; header;   <span class="comment">//链表头结点</span></div><div class="line"></div><div class="line"><span class="keyword">final</span> <span class="keyword">boolean</span> accessOrder;   <span class="comment">//按元素插入顺序(默认)或元素最近访问顺序(LRU)排列</span></div></pre></td></tr></table></figure>
+<p>jdk 8:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; head;   <span class="comment">//链表头结点</span></div><div class="line"></div><div class="line"><span class="keyword">transient</span> LinkedHashMap.Entry&lt;K,V&gt; tail;  <span class="comment">//链表尾节点</span></div><div class="line"></div><div class="line"><span class="keyword">final</span> <span class="keyword">boolean</span> accessOrder;</div></pre></td></tr></table></figure>
+<p>jdk 8中新增了一个<code>链表尾节点</code></p>
+<ul>
+<li>特点</li>
+</ul>
+<p>一般来说，如果需要使用的Map中的key无序，选择<code>HashMap</code>；如果要求key有序，则选择<code>TreeMap</code>。<br>但是选择<code>TreeMap</code>就会有性能问题，因为<code>TreeMap</code>的get操作的时间复杂度是<code>O(log(n))</code>的，相比于<code>HashMap</code>的<code>O(1)</code>还是差不少的，<code>LinkedHashMap</code>的出现就是为了平衡这些因素，使得</p>
+<blockquote>
+<p>能够以<code>O(1)</code>时间复杂度增加查找元素，又能够保证key的有序性</p>
+</blockquote>
+<p>此外，<code>LinkedHashMap</code>提供了两种key的顺序：</p>
+<blockquote>
+<p>访问顺序（access order）：非常实用，可以使用这种顺序实现LRU（Least Recently Used）缓存</p>
+<p>插入顺序（insertion orde）：同一key的多次插入，并不会影响其顺序</p>
+</blockquote>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/04/27/LinkedHashMap/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/7/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/9/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+
+          
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="David" />
+          <p class="site-author-name" itemprop="name">David</p>
+          <p class="site-description motion-element" itemprop="description">Develop Notes</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">124</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">34</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zsr" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2214956781" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
