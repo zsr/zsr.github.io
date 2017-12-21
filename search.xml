@@ -48,6 +48,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">General</div><div class="line">Request URL:http:/mobile.test.ximalaya.com/v1/lesson</div><div class="line">Request Method:POST  </div><div class="line">Status Code:200 OK</div><div class="line"></div><div class="line">Response Headers</div><div class="line">Access-Control-Request-Headers:content-type  </div><div class="line">Access-Control-Request-Method:GET, POST, OPTIONS  </div><div class="line">Access-Control-Allow-Origin:http://localhost:8080</div></pre></td></tr></table></figure>
 <p>这是因为浏览器发现，这是一个非简单请求，就自动发出一个”预检”请求，要求服务器确认可以这样请求。”预检”请求用的请求方法是<code>OPTIONS</code>，表示这个请求是用来询问的。”预检”请求之后，浏览器球会进行正常<code>CORS</code>请求。</p>
 <h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><h4 id="背景说明"><a href="#背景说明" class="headerlink" title="背景说明"></a>背景说明</h4><p>前端H5通过<code>ajax</code>调用后端<code>restful api</code>，并且页面访问域名与<code>api</code>访问域名(<code>mobile.test.ximalaya.com</code>)不同，导致访问报错:</p>
+<p><img src="/images/05C9331E-30FD-4685-AB61-02F308FC3695.png"></p>
 <p><img src="../../public/images/05C9331E-30FD-4685-AB61-02F308FC3695.png" alt="05C9331E-30FD-4685-AB61-02F308FC3695"></p>
 <p>出现这种情况的原因如下：</p>
 <ul>
