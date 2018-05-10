@@ -37,7 +37,7 @@
     <entry>
       <title><![CDATA[Java中检查的异常与未检查的异常]]></title>
       <url>http://zsr.github.io/2018/05/07/Java%E4%B8%AD%E6%A3%80%E6%9F%A5%E7%9A%84%E5%BC%82%E5%B8%B8%E4%B8%8E%E6%9C%AA%E6%A3%80%E6%9F%A5%E7%9A%84%E5%BC%82%E5%B8%B8/</url>
-      <content type="html"><![CDATA[<h3 id="java异常"><a href="#java异常" class="headerlink" title="java异常"></a>java异常</h3><p> <img src="https://images2017.cnblogs.com/blog/1048273/201709/1048273-20170901174731249-814241377.png" alt="img"></p>
+      <content type="html"><![CDATA[<h3 id="java异常"><a href="#java异常" class="headerlink" title="java异常"></a>java异常</h3><p> <img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fr6dtnesi2j30ow0dgabd.jpg" alt=""></p>
 <p>通常我们说的异常是包括<code>exception</code>和<code>error</code>：</p>
 <ul>
 <li><code>Error</code>（错误）：是程序无法处理的错误，表示运行应用程序中较严重问题。大多数的错误与代码编写者执行的操作无关，而是表示代码运行时 JVM（Java 虚拟机）出现的问题。例如，当 JVM 不再有继续执行操作所需的内存资源时，将出现 OutOfMemoryError。这些异常发生时，Java虚拟机（JVM）一般会选择线程终止。</li>
