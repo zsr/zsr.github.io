@@ -79,12 +79,6 @@
     </entry>
     
     <entry>
-      <title><![CDATA[cations       Documents          ENV                Movies             Pictures           Resilio Sync       dev                program            zsr.github.io]]></title>
-      <url>http://zsr.github.io/2018/11/29/cations-Documents-ENV-Movies-Pictures-Resilio-Sync-dev-program-zsr-github-io/</url>
-      <content type="html"></content>
-    </entry>
-    
-    <entry>
       <title><![CDATA[innoDb快照读]]></title>
       <url>http://zsr.github.io/2018/10/22/innoDb%E5%BF%AB%E7%85%A7%E8%AF%BB/</url>
       <content type="html"><![CDATA[<h3 id="快照读-Snapshot-Read"><a href="#快照读-Snapshot-Read" class="headerlink" title="快照读(Snapshot Read)"></a>快照读(Snapshot Read)</h3><p>MySQL数据库，InnoDB存储引擎，为了提高并发，使用MVCC(<strong>多版本并发控制</strong>)机制，在并发事务时，通过读取数据行的历史数据版本，不加锁，来提高并发的一种不加锁一致性读(Consistent Nonlocking Read)。一致性读，又称为快照读</p>
