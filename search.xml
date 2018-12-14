@@ -35,6 +35,8 @@
 </ol>
 <p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy53swbgjzj30rc0nwdk8.jpg" alt=""></p>
 <h3 id="Netty高性能原因"><a href="#Netty高性能原因" class="headerlink" title="Netty高性能原因"></a><code>Netty</code>高性能原因</h3><h4 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a><strong>IO模型</strong></h4><p><code>Netty</code>的IO线程<code>NioEventLoop</code>由于聚合了多路复用器<code>Selector</code>，可以同时并发处理成百上千个客户端<code>Channel</code>，由于读写操作都是非阻塞的，这就可以充分提升IO线程的运行效率，避免由于频繁IO阻塞导致的线程挂起</p>
+<h4 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h4><p><strong>在后面的文章专门详解</strong></p>
+<h4 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h4><p><strong>在后面的文章专门详解</strong></p>
 <h4 id="Netty-线程模型"><a href="#Netty-线程模型" class="headerlink" title="Netty 线程模型"></a><strong>Netty 线程模型</strong></h4><p><code>Netty</code> 主要基于主从 <code>Reactor</code> 多线程模型（如下图）做了一定的修改，其中主从 <code>Reactor</code> 多线程模型有多个 <code>Reactor</code>：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy548sanm2j30rk0iwh0n.jpg" alt=""></p>
 <ul>
