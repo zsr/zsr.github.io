@@ -4,6 +4,63 @@
   
     
     <entry>
+      <title><![CDATA[Netty初探]]></title>
+      <url>http://zsr.github.io/2018/12/12/Netty%E5%88%9D%E6%8E%A2/</url>
+      <content type="html"><![CDATA[<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Netty is an asynchronous event-driven network application framework for rapid development of maintainable high performance protocol servers &amp; clients.</div><div class="line"></div><div class="line">Netty is a NIO client server framework which enables quick and easy development of network applications such as protocol servers and clients. It greatly simplifies and streamlines network programming such as TCP and UDP socket server.</div></pre></td></tr></table></figure>
+<h3 id="为什么不选择JAVA原生NIO"><a href="#为什么不选择JAVA原生NIO" class="headerlink" title="为什么不选择JAVA原生NIO"></a>为什么不选择<code>JAVA</code>原生<code>NIO</code></h3><ul>
+<li><code>NIO</code> 的类库和 <code>API</code> 繁杂，使用麻烦：需要熟练掌握 <code>Selector</code>、<code>ServerSocketChannel</code>、<code>SocketChannel</code>、<code>ByteBuffer</code>等。</li>
+<li>编写出高质量的 <code>NIO</code> 程序需要具备其他的额外技能做铺垫：例如熟悉 <code>Java</code> 多线程编程，因为 <code>NIO</code> 编程涉及到 <code>Reactor</code> 模式，必须对多线程和网路编程非常熟悉。</li>
+<li><code>NIO</code> 编程的特点是功能开发相对容易，但是可靠性能力补齐工作量和难度都非常大：例如客户端面临断连重连、网络闪断、半包读写、失败缓存、网络拥塞和异常码流的处理等等。</li>
+<li><a href="http://www.10tiao.com/html/308/201602/401718035/1.html" target="_blank" rel="external"><code>JDK NIO</code>的 <code>Epoll Bug</code>，它会导致<code>Selector</code>空轮询，最终导致<code>CPU 100%</code></a></li>
+</ul>
+<h3 id="为什么选择Netty"><a href="#为什么选择Netty" class="headerlink" title="为什么选择Netty"></a>为什么选择<code>Netty</code></h3><ul>
+<li><code>API</code>使用简单，开发门槛低；</li>
+<li>功能强大，预置了多种编解码功能，支持多种主流协议；</li>
+<li><strong>定制能力强，可以通过ChannelHandler对通信框架进行灵活地扩展；</strong></li>
+<li>性能高，通过与其他业界主流的<code>NIO</code>框架对比，Netty的综合性能最优；</li>
+<li>成熟、稳定，<code>Netty</code>修复了已经发现的所有<code>JDK NIO BUG</code>；</li>
+</ul>
+<h3 id="Netty架构设计"><a href="#Netty架构设计" class="headerlink" title="Netty架构设计"></a><code>Netty</code>架构设计</h3><p><code>Netty</code>采用了比较典型的三层网络架构进行设计，逻辑架构图如下所示：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy53lm41bjj30ts0fytgt.jpg" alt=""></p>
+<ul>
+<li>传输服务：支持 <code>BIO</code> 和 <code>NIO</code></li>
+<li>容器集成：支持 <code>OSGI</code>、<code>JBossMC</code>、<code>Spring</code>、<code>Guice</code>容器</li>
+<li>协议支持：<code>HTTP</code>、<code>Protobuf</code>、二进制、<code>WebSocket</code>等一系列常见协议都支持。还支持通过实行编码解码逻辑来实现自定义协议</li>
+<li><code>Core</code> 核心：可扩展事件模型、通用通信 <code>API</code>、支持零拷贝的 <code>ByteBuf</code> 缓冲对象</li>
+</ul>
+<h3 id="高性能的三大要素"><a href="#高性能的三大要素" class="headerlink" title="高性能的三大要素"></a><strong>高性能的三大要素</strong></h3><ol>
+<li><strong>传输</strong>：用什么样的通道将数据发送给对方，BIO、NIO 或者 AIO，<strong>IO 模型在很大程度上决定了框架的性能</strong>。</li>
+<li><strong>协议</strong>：采用什么样的通信协议，<code>HTTP</code> 或者内部私有协议。协议的选择不同，性能模型也不同。相比于公有协议，内部私有协议的性能通常可以被设计的更优。</li>
+<li><strong>线程模型</strong>：数据报如何读取？读取之后的编解码在哪个线程进行，编解码后的消息如何派发，<code>Reactor</code> 线程模型的不同，对性能的影响也非常大。</li>
+</ol>
+<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy53swbgjzj30rc0nwdk8.jpg" alt=""></p>
+<h3 id="Netty高性能原因"><a href="#Netty高性能原因" class="headerlink" title="Netty高性能原因"></a><code>Netty</code>高性能原因</h3><h4 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a><strong>IO模型</strong></h4><p><code>Netty</code>的IO线程<code>NioEventLoop</code>由于聚合了多路复用器<code>Selector</code>，可以同时并发处理成百上千个客户端<code>Channel</code>，由于读写操作都是非阻塞的，这就可以充分提升IO线程的运行效率，避免由于频繁IO阻塞导致的线程挂起</p>
+<h4 id="Netty-线程模型"><a href="#Netty-线程模型" class="headerlink" title="Netty 线程模型"></a><strong>Netty 线程模型</strong></h4><p><code>Netty</code> 主要基于主从 <code>Reactor</code> 多线程模型（如下图）做了一定的修改，其中主从 <code>Reactor</code> 多线程模型有多个 <code>Reactor</code>：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy548sanm2j30rk0iwh0n.jpg" alt=""></p>
+<ul>
+<li><code>MainReactor</code>负责客户端的连接请求，并将请求转交给 <code>SubReactor</code></li>
+<li><code>SubReactor</code>负责相应通道的IO读写请求</li>
+<li>非IO请求（具体逻辑处理）等待 <code>worker threads</code> 进行处理</li>
+</ul>
+<p><strong>注意：<code>Netty</code> 的线程模型基于主从 <code>Reactor</code>多线程，借用了 <code>MainReactor</code> 和 <code>SubReactor</code> 的结构。但是<code>Netty</code>实际实现上 <code>SubReactor</code> 和 <code>Worker</code> 线程在同一个线程池中</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">EventLoopGroup bossGroup = <span class="keyword">new</span> NioEventLoopGroup(); </div><div class="line">EventLoopGroup workerGroup = <span class="keyword">new</span> NioEventLoopGroup(); </div><div class="line">ServerBootstrap bootstrap = <span class="keyword">new</span> ServerBootstrap(); </div><div class="line">bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)</div></pre></td></tr></table></figure>
+<p><code>Netty</code>里对应<code>mainReactor</code>的角色叫做<code>Boss</code>，而对应<code>subReactor</code>的角色叫做<code>Worker</code></p>
+<p><code>bossGroup</code> 和 <code>workerGroup</code> 这两个 <code>group</code> 均是线程池：</p>
+<ul>
+<li><code>bossGroup</code> 线程池则只是在 <code>Bind</code> 某个端口后，获得其中一个线程作为 <code>MainReactor</code>，专门处理端口的 <code>Accept</code> 事件</li>
+<li><code>workerGroup</code> 线程池会被各个<code>SubReactor</code> 和 <code>Worker</code> 线程充分利用</li>
+</ul>
+<h3 id="Netty线程模型"><a href="#Netty线程模型" class="headerlink" title="Netty线程模型"></a>Netty线程模型</h3><p>下图来自组内大牛分享，盗来使用～～：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fy6dbsx3k1j31d60sok1f.jpg" alt=""></p>
+<p><strong>注意：服务器端的 <code>ServerSocketChannel</code> 只绑定到了 <code>bossGroup</code> 中的一个线程, 因此在调用<code>Selector.select</code> 处理客户端的连接请求时, 实际上是在一个线程中的, 所以对只有一个服务(监听一个端口)的应用来说, <code>bossGroup</code> 设置多个线程是没有什么作用的, 反而还会造成资源浪费。</strong></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.baeldung.com/netty" target="_blank" rel="external">Introduction to Netty</a></p>
+<p><a href="https://sylvanassun.github.io/2017/11/30/2017-11-30-netty_introduction/" target="_blank" rel="external">Netty的那点事儿</a></p>
+<p><a href="https://xiaozhuanlan.com/topic/2153098467" target="_blank" rel="external">NIO Reactor 模型 &amp; Netty 线程模型</a></p>
+<p><a href="https://stackoverflow.com/questions/22280916/do-we-need-more-than-a-single-thread-for-boss-group" target="_blank" rel="external">do we need more than a single thread for boss group?</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Reactor 模型]]></title>
       <url>http://zsr.github.io/2018/12/07/Reactor-%E6%A8%A1%E5%9E%8B/</url>
       <content type="html"><![CDATA[<p>服务端如何处理请求：后端接收到一个请求，简化下会做以下四个操作：</p>
