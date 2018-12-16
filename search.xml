@@ -4,6 +4,52 @@
   
     
     <entry>
+      <title><![CDATA[Netty 核心组件]]></title>
+      <url>http://zsr.github.io/2018/12/15/Netty-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/</url>
+      <content type="html"><![CDATA[<h3 id="Netty工作架构图"><a href="#Netty工作架构图" class="headerlink" title="Netty工作架构图"></a><code>Netty</code>工作架构图</h3><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fy8w6dygu9j30fa0cs0t5.jpg" alt=""></p>
+<h3 id="模块组件"><a href="#模块组件" class="headerlink" title="模块组件"></a>模块组件</h3><h4 id="Bootstrap"><a href="#Bootstrap" class="headerlink" title="Bootstrap"></a><code>Bootstrap</code></h4><p><code>Bootstrap</code>是启动引导类，一个 <code>Netty</code> 应用通常由一个 <code>Bootstrap</code> 开始，主要作用是配置整个 <code>Netty</code> 程序，串联各个组件</p>
+<ul>
+<li><code>Bootstrap</code> 类是客户端程序的启动引导类</li>
+<li><code>ServerBootstrap</code> 类是服务端启动引导类</li>
+</ul>
+<h4 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a><code>Channel</code></h4><p><code>Channel</code>的本质是对操作系统产生的FD（文件描述符）的映射，并且提供绑定到<code>Selector</code>多路选择器上的能力</p>
+<h4 id="ChannelFuture"><a href="#ChannelFuture" class="headerlink" title="ChannelFuture"></a><code>ChannelFuture</code></h4><p>在 <code>Netty</code> 中所有的IO操作都是异步的，不能立刻得知消息是否被正确处理。 <code>Future</code> 对象可以看作是一个异步操作结果的占位符；它将在未来的某个时刻完成，并提供对其结果的访问。</p>
+<p><code>Netty</code> 提供了<code>ChannelFuture</code>，用于在执行异步操作的时候使用。每个<code>Netty</code>的出站IO操作都会返回一个<code>ChannelFuture</code>。<code>ChannelFuture</code>可以注册<code>ChannelFutureListener</code> 实例，其中的回调方法<code>operationComplete()</code>,将会在对应的操作完成时被调用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function">ChannelFuture <span class="title">write</span><span class="params">(Object msg, ChannelPromise promise)</span></span>;</div></pre></td></tr></table></figure>
+<h4 id="ChannelHandler"><a href="#ChannelHandler" class="headerlink" title="ChannelHandler"></a><code>ChannelHandler</code></h4><p><code>ChannelHandler</code> 是一个接口，它充当了所有处理入站和出站数据的应用程序逻辑的容器，并将其转发到其 <code>ChannelPipeline</code>中的下一个<code>ChannelHandler</code>；该类是基于事件驱动的，它会响应相关的事件然后去调用其关联的回调函数，例如：当一个新的连接被建立时，<code>ChannelHandler</code>的<code>channelActive()</code>方法将会被调用</p>
+<p><code>ChannelHandler</code>子类，例如：</p>
+<ul>
+<li><code>ChannelInboundHandler</code>：用于处理入站IO事件。</li>
+<li><code>ChannelOutboundHandler</code>：用于处理出站IO操作。</li>
+</ul>
+<h4 id="ChannelPipline"><a href="#ChannelPipline" class="headerlink" title="ChannelPipline"></a><code>ChannelPipline</code></h4><p><code>ChannelPipeline</code> 是聚合了 <code>ChannelHandler</code> 的管道，本质上是一个职责链路（用于处理<code>Channel</code>的入站事件和出站操作），在<code>Worker</code>线程中会对每一个<code>Channel</code>执行其所对应的<code>pipeline</code>链，完成整个生命周期。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fy8rq2caj7j30uw08k76d.jpg" alt=""></p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNbRwgy1fy8tkgaop2j31jo0mcac9.jpg" alt=""></p>
+<p>蓝色表示 <code>ChannelInboundHandler</code> ，绿色表示 <code>ChannelOutboundHandler</code>，黄色则承担两个角色，而每个<code>Handler</code>又会使用 <code>ChannelHandlerContext</code> 封装起来，在 <code>ChannelPipeline</code> 中组装成双向链表。</p>
+<p><strong>ChannelPipeline handler 执行顺序</strong>：</p>
+<ul>
+<li><strong>入站事件流从头到尾执行所有的<code>handler</code>(入站的时候也会经过<code>OutboundChannelHandler</code>，只不过略过了这个<code>ChannelHandler</code>)</strong></li>
+<li><strong>出站事件流从尾到头执行所有的<code>handler</code>(出站的时候也会经过<code>InboundChannelHandler</code>，只不过略过了这个<code>ChannelHandler</code>)</strong></li>
+</ul>
+<p><strong>注意： 在具体业务处理类<code>ProcessingHandler</code>中将响应数据发出有2种方式</strong>：</p>
+<ol>
+<li><code>ChannelHandlerContext.writeAndFlush(msg)</code>：不用经过<code>TailConext</code>, 从该<code>handler</code>开始往前执行<code>OutboundChannelHandler</code>，性能更好一些</li>
+<li><code>ChannelHandlerContext.pipeline().writeAndFlush(msg)</code>：从<code>TailConext</code>开始执行， 往前执行<code>OutboundChannelHandler</code></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> AbstractChannelHandlerContext <span class="title">findContextOutbound</span><span class="params">()</span> </span>&#123;</div><div class="line">        AbstractChannelHandlerContext ctx = <span class="keyword">this</span>;</div><div class="line">        do &#123;</div><div class="line">            <span class="comment">// 注意，这里是往前找</span></div><div class="line">            ctx = ctx.prev;</div><div class="line">        &#125; <span class="keyword">while</span> (!ctx.outbound);</div><div class="line">        <span class="keyword">return</span> ctx;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<h4 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a><code>EventLoop</code></h4><p><code>EventLoop</code> 是事件循环，对应<code>Reactor</code>线程，以 <code>NioEventLoop</code> 为例，实现原理是：维护了一个线程和任务队列，支持异步提交任务，线程启动时会调用<code>NioEventLoop</code> 的 <code>run</code> 方法，执行IO任务和非IO任务，由于 <code>EventLoop</code> 是单线程，因此在使用时要注意耗时操作，阻塞操作都不要放到 <code>EventLoop</code> 中，其适合处理耗时短并且简单的任务</p>
+<ul>
+<li><strong>IO任务</strong>：即 <code>selectionKey</code> 中事件，如 <code>accept</code>、<code>connect</code>、<code>read</code>、<code>write</code>等，由<code>processSelectedKeys</code>方法触发。</li>
+<li><strong>非IO任务</strong>：添加到 <code>taskQueue</code> 中的任务，如延迟任务，由 <code>runAllTasks</code> 方法触发。</li>
+</ul>
+<p>两种任务的执行时间比由变量 <code>ioRatio</code> 控制，默认为50%，则表示允许<strong>非IO任务执行的时间与IO任务的执行时间相等</strong></p>
+<h4 id="EventLoopGroup"><a href="#EventLoopGroup" class="headerlink" title="EventLoopGroup"></a><code>EventLoopGroup</code></h4><p><code>EventLoopGroup</code>包含一个或者多个<code>EventLoop</code>，主要管理<code>EventLoop</code>的生命周期，可以理解为一个线程池，内部维护了一组线程，<strong>每个线程(<code>EventLoop</code>)可以负责处理多个<code>Channel</code>上的事件，而一个<code>Channel</code>只能注册于一个<code>EventLoop</code>(防止线程并发问题)</strong></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.lmlphp.com/user/95/article/item/12624/" target="_blank" rel="external">最透彻的Netty原理架构解析</a></p>
+<p><a href="http://www.liuhaihua.cn/archives/530938.html" target="_blank" rel="external">Netty–Reactor模型的应用</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Netty fix epoll bug]]></title>
       <url>http://zsr.github.io/2018/12/15/Netty-fix-epoll-bug/</url>
       <content type="html"><![CDATA[<p><code>JDK NIO</code>的<code>epoll bug</code>，会导致<code>Selector</code>空轮询，最终导致CPU 100%</p>
