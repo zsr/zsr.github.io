@@ -6,7 +6,7 @@
     <entry>
       <title><![CDATA[Netty 核心组件]]></title>
       <url>http://zsr.github.io/2018/12/15/Netty-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/</url>
-      <content type="html"><![CDATA[<h3 id="Netty工作架构图"><a href="#Netty工作架构图" class="headerlink" title="Netty工作架构图"></a><code>Netty</code>工作架构图</h3><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fy8w6dygu9j30fa0cs0t5.jpg" alt=""></p>
+      <content type="html"><![CDATA[<h3 id="Netty工作架构图"><a href="#Netty工作架构图" class="headerlink" title="Netty工作架构图"></a><code>Netty</code>工作架构图</h3><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fycc2uem9sj313i0p643a.jpg" alt=""></p>
 <h3 id="模块组件"><a href="#模块组件" class="headerlink" title="模块组件"></a>模块组件</h3><h4 id="Bootstrap"><a href="#Bootstrap" class="headerlink" title="Bootstrap"></a><code>Bootstrap</code></h4><p><code>Bootstrap</code>是启动引导类，一个 <code>Netty</code> 应用通常由一个 <code>Bootstrap</code> 开始，主要作用是配置整个 <code>Netty</code> 程序，串联各个组件</p>
 <ul>
 <li><code>Bootstrap</code> 类是客户端程序的启动引导类</li>
