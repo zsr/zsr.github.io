@@ -1,1 +1,1196 @@
-<!doctype html><html class="theme-next pisces use-motion"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css"><link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css"><meta name="keywords" content="Hexo, NexT"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1"><meta name="description" content="Develop Notes"><meta property="og:type" content="website"><meta property="og:title" content="Hello Coder"><meta property="og:url" content="http://zsr.github.io/page/5/index.html"><meta property="og:site_name" content="Hello Coder"><meta property="og:description" content="Develop Notes"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Hello Coder"><meta name="twitter:description" content="Develop Notes"><script type="text/javascript" id="hexo.configuration">var NexT=window.NexT||{},CONFIG={scheme:"Pisces",sidebar:{position:"left",display:"post"},fancybox:!0,motion:!0,duoshuo:{userId:0,author:"博主"}}</script><link rel="canonical" href="http://zsr.github.io/page/5/"><title> Hello Coder</title></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans"><script>!function(e,a,t,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=a.createElement(t),s=a.getElementsByTagName(t)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","//www.google-analytics.com/analytics.js","ga"),ga("create","UA-81477846-1","auto"),ga("send","pageview")</script><div class="container one-collumn sidebar-position-left page-home"><div class="headband"></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Hello Coder</span><span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"> <button><span class="btn-bar"></span><span class="btn-bar"></span><span class="btn-bar"></span></button></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br> 首页</a></li><li class="menu-item menu-item-archives"><a href="/archives" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br> 归档</a></li><li class="menu-item menu-item-tags"><a href="/tags" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br> 标签</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br> 搜索</a></li></ul><div class="site-search"><div class="popup"><span class="search-icon fa fa-search"></span> <input type="text" id="local-search-input"><div id="local-search-result"></div> <span class="popup-btn-close">close</span></div></div></nav></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><section id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2018/04/08/jdk动态代理分析/" itemprop="url">jdk动态代理分析</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2018-04-08T14:36:47+08:00" content="2018-04-08">2018-04-08</time></span></div></header><div class="post-body" itemprop="articleBody"><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">疑问：JDK的动态代理为什么不支持对类的代理，只支持接口的代理？</div></pre></td></tr></table></figure><h3 id="jdk动态代理实例"><a href="#jdk动态代理实例" class="headerlink" title="jdk动态代理实例"></a><code>jdk</code>动态代理实例</h3><ul><li>服务接口</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Hello</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String someThing)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure><ul><li>接口实现类</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloImpl</span> <span class="keyword">implements</span> <span class="title">Hello</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String someThing)</span> </span>&#123;</div><div class="line">    System.out.println(<span class="string">"Hello: "</span> + someThing);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure><ul><li>调用处理类</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.lang.reflect.InvocationHandler;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloInvocationHandle</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="keyword">private</span> Object target;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="title">HelloInvocationHandle</span><span class="params">(Object target)</span> </span>&#123;</div><div class="line">    <span class="keyword">this</span>.target = target;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</div><div class="line">    System.out.println(<span class="string">"Before invocation"</span>);</div><div class="line">    Object ret = method.invoke(target, args);</div><div class="line">    System.out.println(<span class="string">"after invocation"</span>);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> ret;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure><ul><li>运行测试</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.lang.reflect.Proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloProxyTest</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line"></div><div class="line">    Hello hello = <span class="keyword">new</span> HelloImpl();</div><div class="line">    HelloInvocationHandle helloInvocationHandler = <span class="keyword">new</span> HelloInvocationHandle(hello);</div><div class="line"></div><div class="line">    <span class="comment">// 通过Proxy.newProxyInstance生成代理对象</span></div><div class="line">    Hello helloProxy = (Hello) Proxy.newProxyInstance(Hello.class.getClassLoader(), hello.getClass().getInterfaces(),</div><div class="line">            helloInvocationHandler);</div><div class="line"></div><div class="line">    <span class="comment">// 调用say方法</span></div><div class="line">    helloProxy.say(<span class="string">"test"</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure><p>结果：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Before invocation</div><div class="line">Hello: test</div><div class="line">after invocation</div></pre></td></tr></table></figure><h3 id="Proxy-newProxyInstance分析"><a href="#Proxy-newProxyInstance分析" class="headerlink" title="Proxy.newProxyInstance分析"></a><code>Proxy.newProxyInstance</code>分析</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">newProxyInstance</span><span class="params">(ClassLoader loader,</span></span></div><div class="line">                                          Class&lt;?&gt;[] interfaces,</div><div class="line">                                          InvocationHandler h)</div><div class="line">        <span class="keyword">throws</span> IllegalArgumentException</div><div class="line">    &#123;</div><div class="line">        Objects.requireNonNull(h);</div><div class="line"></div><div class="line">        <span class="keyword">final</span> Class&lt;?&gt;[] intfs = interfaces.clone();</div><div class="line">        <span class="keyword">final</span> SecurityManager sm = System.getSecurityManager();</div><div class="line">        <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</div><div class="line">            checkProxyAccess(Reflection.getCallerClass(), loader, intfs);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">/*</span></div><div class="line">         * 动态生成Class的地方，重点是看这里面的方法</div><div class="line">         */</div><div class="line">        Class&lt;?&gt; cl = getProxyClass0(loader, intfs);</div><div class="line"></div><div class="line">        <span class="comment">/*</span></div><div class="line">         * 获取代理类的实例  </div><div class="line">         */</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</div><div class="line">                checkNewProxyPermission(Reflection.getCallerClass(), cl);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> Constructor&lt;?&gt; cons = cl.getConstructor(constructorParams);</div><div class="line">            <span class="keyword">final</span> InvocationHandler ih = h;</div><div class="line">            <span class="keyword">if</span> (!Modifier.isPublic(cl.getModifiers())) &#123;</div><div class="line">                AccessController.doPrivileged(<span class="keyword">new</span> PrivilegedAction&lt;Void&gt;() &#123;</div><div class="line">                    <span class="function"><span class="keyword">public</span> Void <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">                        cons.setAccessible(<span class="keyword">true</span>);</div><div class="line">                        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> cons.newInstance(<span class="keyword">new</span> Object[]&#123;h&#125;);</div><div class="line">        &#125; </div><div class="line">&#125;</div></pre></td></tr></table></figure><ul><li>生成代理类<code>Class</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"> <span class="keyword">private</span> <span class="keyword">static</span> Class&lt;?&gt; getProxyClass0(ClassLoader loader,</div><div class="line">                                           Class&lt;?&gt;... interfaces) &#123;</div><div class="line">        <span class="keyword">if</span> (interfaces.length &gt; <span class="number">65535</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"interface limit exceeded"</span>);</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        <span class="comment">// JDK对代理进行了缓存，如果已经存在相应的代理类，则直接返回，</span></div><div class="line">        <span class="comment">// 否则才会通过ProxyClassFactory来创建代理  </span></div><div class="line">        <span class="keyword">return</span> proxyClassCache.get(loader, interfaces);</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> WeakCache&lt;ClassLoader, Class&lt;?&gt;[], Class&lt;?&gt;&gt;</div><div class="line">        proxyClassCache = <span class="keyword">new</span> WeakCache&lt;&gt;(<span class="keyword">new</span> KeyFactory(), <span class="keyword">new</span> ProxyClassFactory());</div></pre></td></tr></table></figure><ul><li>代理类<code>Class</code>工厂</li></ul><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">private static final class ProxyClassFactory</div><div class="line">        implements BiFunction&lt;ClassLoader, Class&lt;?&gt;[], Class&lt;?&gt;&gt;</div><div class="line">    &#123;</div><div class="line">        // 所有代理类名字的前缀</div><div class="line">        private static final String proxyClassNamePrefix = "$Proxy";</div><div class="line"></div><div class="line">        // next number to use for generation of unique proxy class names</div><div class="line">        private static final AtomicLong nextUniqueNumber = new AtomicLong();</div><div class="line"></div><div class="line">        @Override</div><div class="line">        public Class&lt;?&gt; apply(ClassLoader loader, Class&lt;?&gt;[] interfaces) &#123;</div><div class="line">            ......</div><div class="line"></div><div class="line">            /*</div><div class="line">             * Choose a name for the proxy class to generate.</div><div class="line">             */</div><div class="line">            long num = nextUniqueNumber.getAndIncrement();</div><div class="line">            // 默认情况下，代理类的完全限定名为：</div><div class="line">            // com.sun.proxy.$Proxy0，com.sun.proxy.$Proxy1依次递增</div><div class="line">            String proxyName = proxyPkg + proxyClassNamePrefix + num;</div><div class="line"></div><div class="line">            // ** 生成代理类字节码的地方 ** //</div><div class="line">            byte[] proxyClassFile = ProxyGenerator.generateProxyClass(</div><div class="line">                proxyName, interfaces);</div><div class="line">            try &#123;</div><div class="line">               // 根据二进制字节码返回相应的Class实例  </div><div class="line">                return defineClass0(loader, proxyName,</div><div class="line">                                    proxyClassFile, 0, proxyClassFile.length);</div><div class="line">            &#125; catch (ClassFormatError e) &#123;</div><div class="line">                throw new IllegalArgumentException(e.toString());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure><h3 id="反编译代理类"><a href="#反编译代理类" class="headerlink" title="反编译代理类"></a>反编译代理类</h3><ul><li>修改测试<code>HelloProxyTest</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloProxyTest</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">    </div><div class="line">  <span class="comment">//设置为true,会在工程根目录生成$Proxy0.class代理类（com.sun.proxy.$Proxy0.class）</span></div><div class="line">    System.getProperties().put(</div><div class="line">        <span class="string">"sun.misc.ProxyGenerator.saveGeneratedFiles"</span>, <span class="string">"true"</span>);</div><div class="line"></div><div class="line">    Hello hello = <span class="keyword">new</span> HelloImpl();</div><div class="line">    HelloInvocationHandle helloInvocationHandler = <span class="keyword">new</span> HelloInvocationHandle(hello);</div><div class="line"></div><div class="line">    <span class="comment">// 通过Proxy.newProxyInstance生成代理对象</span></div><div class="line">    Hello helloProxy = (Hello) Proxy.newProxyInstance(Hello.class.getClassLoader(), hello.getClass().getInterfaces(),</div><div class="line">            helloInvocationHandler);</div><div class="line"></div><div class="line">    <span class="comment">// 调用say方法</span></div><div class="line">    helloProxy.say(<span class="string">"test"</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure><p><strong>注意，当把<code>saveGeneratedFiles</code>属性设置为true时，生成的class文件及其所在的路径都需要提前创建，否则会抛出FileNotFoundException异常；即要在运行当前main方法的路径下创建com/sun/proxy目录，并创建一个$Proxy0.class文件</strong></p><ul><li>反编译文件<code>$Proxy0.class</code></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.sun.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> com.zsr.test.proxy.Hello;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.InvocationHandler;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Proxy;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.UndeclaredThrowableException;</div><div class="line"></div><div class="line"><span class="comment">// ** 注意这里代理类实现了接口 ** //</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> $<span class="title">Proxy0</span> <span class="keyword">extends</span> <span class="title">Proxy</span></span></div><div class="line">  <span class="keyword">implements</span> <span class="title">Hello</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m1;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m0;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m3;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m2;</div><div class="line"></div><div class="line">  <span class="keyword">public</span> $Proxy0(InvocationHandler paramInvocationHandler)</div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">super</span>(paramInvocationHandler);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object paramObject)</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> ((Boolean)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m1, <span class="keyword">new</span> Object[] &#123; paramObject &#125;)).booleanValue();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> ((Integer)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m0, <span class="keyword">null</span>)).intValue();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String paramString)</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m3, <span class="keyword">new</span> Object[] &#123; paramString &#125;);</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> String <span class="title">toString</span><span class="params">()</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> (String)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m2, <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">static</span></div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      m1 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"equals"</span>, <span class="keyword">new</span> Class[] &#123; Class.forName(<span class="string">"java.lang.Object"</span>) &#125;);</div><div class="line">      m0 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"hashCode"</span>, <span class="keyword">new</span> Class[<span class="number">0</span>]);</div><div class="line">      m3 = Class.forName(<span class="string">"com.zsr.test.proxy.Hello"</span>).getMethod(<span class="string">"say"</span>, <span class="keyword">new</span> Class[] &#123; Class.forName(<span class="string">"java.lang.String"</span>) &#125;);</div><div class="line">      m2 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"toString"</span>, <span class="keyword">new</span> Class[<span class="number">0</span>]);</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (NoSuchMethodException localNoSuchMethodException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchMethodError(localNoSuchMethodException.getMessage());</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (ClassNotFoundException localClassNotFoundException)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> NoClassDefFoundError(localClassNotFoundException.getMessage());</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure><p>显而易见，动态生成的代理类有如下特性：</p><ol><li><strong>继承了Proxy类，实现了代理的接口，由于java不能多继承，这里已经继承了Proxy类了，不能再继承其他的类，所以JDK的动态代理不支持对实现类的代理，只支持接口的代理。</strong></li><li>代理类实现代理接口的<code>say</code>方法中，只是简单的调用了<code>InvocationHandler</code>的<code>invoke</code>方法，我们可以在<code>invoke</code>方法中进行一些特殊操作，甚至不调用实现的方法，直接返回。</li></ol><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://zhuanlan.zhihu.com/p/29188162" target="_blank" rel="external">JDK动态代理源码分析</a></p></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2018/03/27/消息feed系统研究/" itemprop="url">消息feed系统研究</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2018-03-27T18:53:50+08:00" content="2018-03-27">2018-03-27</time></span></div></header><div class="post-body" itemprop="articleBody"></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2018/03/21/LRUMap/" itemprop="url">LRUMap</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2018-03-21T14:06:25+08:00" content="2018-03-21">2018-03-21</time></span></div></header><div class="post-body" itemprop="articleBody"></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2018/03/14/无锁hashMap/" itemprop="url">无锁hashMap</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2018-03-14T11:33:22+08:00" content="2018-03-14">2018-03-14</time></span></div></header><div class="post-body" itemprop="articleBody"></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><header class="post-header"><h1 class="post-title" itemprop="name headline"> <a class="post-title-link" href="/2018/03/13/TreeMap/" itemprop="url">TreeMap</a></h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i></span> <span class="post-meta-item-text">发表于</span> <time itemprop="dateCreated" datetime="2018-03-13T21:34:22+08:00" content="2018-03-13">2018-03-13</time></span></div></header><div class="post-body" itemprop="articleBody"><h2 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h2><ul><li>类继承关系</li></ul><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">NavigableMap&lt;K,V&gt;</div><div class="line">    java.util.AbstractMap&lt;K,V&gt;</div><div class="line">        java.util.TreeMap&lt;K,V&gt;</div></pre></td></tr></table></figure><ul><li>定义</li></ul><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public class TreeMap&lt;K,V&gt;</div><div class="line">    extends AbstractMap&lt;K,V&gt;</div><div class="line">    implements NavigableMap&lt;K,V&gt;, Cloneable, java.io.Serializable</div></pre></td></tr></table></figure><p><code>TreeMap</code>实现<code>NavigableMap</code>接口，说明支持一系列的导航方法</p><ul><li>核心成员变量</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure><ul><li>内部节点</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure><ul><li>要点</li></ul><p>]</p><div class="post-more-link text-center"> <a class="btn" href="/2018/03/13/TreeMap/#more" rel="contents">阅读全文 &raquo;</a></div></div><div></div><div></div><footer class="post-footer"><div class="post-eof"></div></footer></article></section><nav class="pagination"><a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a> <a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/31/">31</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a></nav></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span><span class="sidebar-toggle-line sidebar-toggle-line-middle"></span><span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div class="sidebar-inner"><section class="site-overview sidebar-panel sidebar-panel-active"><div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person"> <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="David"><p class="site-author-name" itemprop="name">David</p><p class="site-description motion-element" itemprop="description">Develop Notes</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"> <a href="/archives"><span class="site-state-item-count">154</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-tags"> <a href="/tags"><span class="site-state-item-count">37</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="links-of-author motion-element"><span class="links-of-author-item"><a href="https://github.com/zsr" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i> GitHub</a></span><span class="links-of-author-item"><a href="http://weibo.com/u/2214956781" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i> Weibo</a></span></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright"> &copy; 2016 - <span itemprop="copyrightYear">2019</span><span class="with-love"><i class="fa fa-heart"></i></span> <span class="author" itemprop="copyrightHolder">David</span></div><div class="powered-by"> 由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动</div><div class="theme-info"> 主题 - <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a></div></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script><script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script><script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script><script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script><script type="text/javascript">function proceedsearch(){$("body").append('<div class="popoverlay">').css("overflow","hidden"),$(".popup").toggle()}var isfetched=!1,search_path="search.xml";0==search_path.length&&(search_path="search.xml");var path="/"+search_path,searchFunc=function(e,t,a){"use strict";$.ajax({url:e,dataType:"xml",async:!0,success:function(e){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var r=$("entry",e).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get(),c=document.getElementById(t),s=document.getElementById(a);c.addEventListener("input",function(){var e=0,t='<ul class="search-result-list">',a=this.value.trim().toLowerCase().split(/[\s\-]+/);s.innerHTML="",this.value.trim().length>1&&r.forEach(function(r){var c=!0,s=r.title.trim().toLowerCase(),n=r.content.trim().replace(/<[^>]+>/g,"").toLowerCase(),i=r.url,o=-1,l=-1,p=-1;if(""!=s&&""!=n&&a.forEach(function(e,t){o=s.indexOf(e),l=n.indexOf(e),o<0&&l<0?c=!1:(l<0&&(l=0),0==t&&(p=l))}),c){e+=1,t+="<li><a href='"+i+"' class='search-result-title'>"+s+"</a>";var h=r.content.trim().replace(/<[^>]+>/g,"");if(p>=0){var u=p-20,d=p+80;u<0&&(u=0),0==u&&(d=50),d>h.length&&(d=h.length);var f=h.substring(u,d);a.forEach(function(e){var t=new RegExp(e,"gi");f=f.replace(t,'<b class="search-keyword">'+e+"</b>")}),t+='<p class="search-result">'+f+"...</p>"}t+="</li>"}}),t+="</ul>",0==e&&(t='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'),""==a&&(t='<div id="no-result"><i class="fa fa-search fa-5x" /></div>'),s.innerHTML=t}),proceedsearch()}})};$(".popup-trigger").click(function(e){e.stopPropagation(),0==isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(function(e){$(".popup").hide(),$(".popoverlay").remove(),$("body").css("overflow","")}),$(".popup").click(function(e){e.stopPropagation()})</script></body></html>
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Develop Notes">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hello Coder">
+<meta property="og:url" content="http://zsr.github.io/page/5/index.html">
+<meta property="og:site_name" content="Hello Coder">
+<meta property="og:description" content="Develop Notes">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hello Coder">
+<meta name="twitter:description" content="Develop Notes">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://zsr.github.io/page/5/"/>
+
+  <title> Hello Coder </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-81477846-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left 
+   page-home 
+ ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Hello Coder</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/17/Spring事务管理/" itemprop="url">
+                  Spring事务管理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-04-17T16:20:27+08:00" content="2018-04-17">
+              2018-04-17
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="Spring事务管理概述"><a href="#Spring事务管理概述" class="headerlink" title="Spring事务管理概述"></a>Spring事务管理概述</h3><h4 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h4><p>隔离级别是指若干个并发的事务之间的隔离程度。<code>TransactionDefinition</code> 接口中定义了五个表示隔离级别的常量：</p>
+<ul>
+<li><code>TransactionDefinition.ISOLATION_DEFAULT</code>：这是默认值，表示使用底层数据库的默认隔离级别。对大部分数据库而言，通常这值就是<code>TransactionDefinition.ISOLATION_READ_COMMITTED</code>，<code>MySQL InnoDB</code> 存储引擎隔离级别为 <code>Repeatable Read</code>。</li>
+<li><code>TransactionDefinition.ISOLATION_READ_UNCOMMITTED</code>：该隔离级别表示一个事务可以读取另一个事务修改但还没有提交的数据。该级别不能防止脏读和不可重复读，因此很少使用该隔离级别。</li>
+<li><code>TransactionDefinition.ISOLATION_READ_COMMITTED</code>：该隔离级别表示一个事务只能读取另一个事务已经提交的数据。该级别可以防止脏读，这也是大多数情况下的推荐值。</li>
+<li><code>TransactionDefinition.ISOLATION_REPEATABLE_READ</code>：该隔离级别表示一个事务在整个过程中可以多次重复执行某个查询，并且每次返回的记录都相同。即使在多次查询之间有新增的数据满足该查询，这些新增的记录也会被忽略。该级别可以防止脏读和不可重复读。</li>
+<li><code>TransactionDefinition.ISOLATION_SERIALIZABLE</code>：所有的事务依次逐个执行，这样事务之间就完全不可能产生干扰，也就是说，该级别可以防止脏读、不可重复读以及幻读。但是这将严重影响程序的性能。通常情况下也不会用到该级别。</li>
+</ul>
+<h4 id="事务传播行为"><a href="#事务传播行为" class="headerlink" title="事务传播行为"></a>事务传播行为</h4><p>事务的传播行为是指，如果在开始当前事务之前，一个事务上下文已经存在，此时有若干选项可以指定一个事务性方法的执行行为。在<code>TransactionDefinition</code>定义中包括了如下几个表示传播行为的常量</p>
+<ul>
+<li><code>TransactionDefinition.PROPAGATION_REQUIRED</code>：如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。</li>
+</ul>
+<p><img src="https://img-blog.csdn.net/20140420132157531?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvaXRfd2FuZ3hpYW5ncGFu/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="img"></p>
+<ul>
+<li><code>TransactionDefinition.PROPAGATION_REQUIRES_NEW</code>：创建一个新的事务，如果当前存在事务，则把当前事务挂起。</li>
+<li><code>TransactionDefinition.PROPAGATION_SUPPORTS</code>：如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行。</li>
+<li><code>TransactionDefinition.PROPAGATION_NOT_SUPPORTED</code>：以非事务方式运行，如果当前存在事务，则把当前事务挂起。</li>
+<li><code>TransactionDefinition.PROPAGATION_NEVER</code>：以非事务方式运行，如果当前存在事务，则抛出异常。</li>
+<li><code>TransactionDefinition.PROPAGATION_MANDATORY</code>：如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。</li>
+<li><code>TransactionDefinition.PROPAGATION_NESTED</code>：如果当前存在事务，则创建一个事务作为当前事务的嵌套事务来运行；如果当前没有事务，则该取值等价于<code>TransactionDefinition.PROPAGATION_REQUIRED</code>。</li>
+</ul>
+<h3 id="Spring事务使用方式"><a href="#Spring事务使用方式" class="headerlink" title="Spring事务使用方式"></a>Spring事务使用方式</h3><p><code>Spring</code>提供了对<code>编码式</code>和<code>声明式</code>事务管理的支持，<code>Spring</code>对事务管理是通过事务管理器来实现的</p>
+<ul>
+<li><strong>编程式事务：</strong>指的是通过编码方式实现事务，即类似于<code>JDBC</code>编程实现事务管理。使用<code>TransactionTemplate</code>或者直接使用底层的<code>PlatformTransactionManager</code>做事务管理。</li>
+<li><strong>声明式事务：</strong>其本质是对方法前后进行拦截(<code>AOP</code>)，然后在目标方法开始之前创建或者加入一个事务，在执行完目标方法之后根据执行情况提交或者回滚事务。</li>
+</ul>
+<p><strong>声明式事务优点：不需要通过编程的方式管理事务，这样就不需要在业务逻辑代码中掺杂事务管理的代码，</strong>只需在配置文件中做相关的事务规则声明(或通过基于<code>@Transactional</code>注解的方式)，便可以将事务规则应用到业务逻辑中;</p>
+<p><strong>声明式事务缺点：声明式的最细粒度只能作用到方法级别，无法做到像编程式事务那样可以作用到代码块级别</strong></p>
+<table>
+<thead>
+<tr>
+<th>事务管理器(<code>org.springframework.*</code>)</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DataSourceTransactionManager</code></td>
+<td>提供对单个<code>javax.sql.DataSource</code>事务管理，用于Spring JDBC抽象框架、iBATIS或MyBatis框架的事务管理；</td>
+</tr>
+<tr>
+<td><code>JpaTransactionManager</code></td>
+<td>提供对单个<code>javax.persistence.EntityManagerFactory</code>事务支持，用于集成JPA实现框架时的事务管理；</td>
+</tr>
+<tr>
+<td><code>JtaTransactionManager</code></td>
+<td>提供对分布式事务管理的支持，并将事务管理委托给Java EE应用服务器事务管理器；</td>
+</tr>
+</tbody>
+</table>
+<h4 id="编程式事务"><a href="#编程式事务" class="headerlink" title="编程式事务"></a>编程式事务</h4><p><code>Spring</code>提供了线程安全的<code>TransactionTemplate</code>模板类来处理不变的事务管理逻辑，将变化的部分抽象为回调接口<code>TransactionCallback</code>供用户自定义数据访问逻辑</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!-- 数据源配置 --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"dataSource"</span> <span class="attr">class</span>=<span class="string">"com.mchange.v2.c3p0.ComboPooledDataSource"</span>&gt;</span></div><div class="line">      <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClass"</span> <span class="attr">value</span>=<span class="string">"#&#123;jdbc['jdbc.driverClassName']&#125;"</span>/&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line"><span class="comment">&lt;!-- 配置事务管理器 --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionManager"</span> <span class="attr">class</span>=<span class="string">"org.springframework.jdbc.datasource.DataSourceTransactionManager"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line"><span class="comment">&lt;!--事务模板 --&gt;</span>  </div><div class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionTemplate"</span> <span class="attr">class</span>=<span class="string">"org.springframework.transaction.support.TransactionTemplate"</span>&gt;</span>  </div><div class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"transactionManager"</span> <span class="attr">ref</span>=<span class="string">"transactionManager"</span>/&gt;</span>  </div><div class="line">    <span class="comment">&lt;!--ISOLATION_DEFAULT 表示由使用的数据库决定  --&gt;</span>  </div><div class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"isolationLevelName"</span> <span class="attr">value</span>=<span class="string">"ISOLATION_DEFAULT"</span>/&gt;</span>  </div><div class="line">    <span class="comment">&lt;!-- 事务传播方式 --&gt;</span>  </div><div class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"propagationBehaviorName"</span> <span class="attr">value</span>=<span class="string">"PROPAGATION_REQUIRED"</span> /&gt;</span>  </div><div class="line">    <span class="comment">&lt;!-- &lt;property name="timeout" value="30"/&gt; --&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceImpl</span> </span>&#123;</div><div class="line">  </div><div class="line">	<span class="meta">@autowried</span></div><div class="line">	<span class="keyword">private</span> TransactionTemplate template;</div><div class="line">  </div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addElement</span><span class="params">(<span class="keyword">final</span> Element ele)</span> </span>&#123;</div><div class="line">		template.execute(<span class="keyword">new</span> TransactionCallbackWithoutResult() &#123;</div><div class="line">			<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doInTransactionWithoutResult</span><span class="params">(TransactionStatus status)</span></span>&#123;</div><div class="line">                    <span class="comment">// 数据库操作1</span></div><div class="line">                    <span class="comment">// 数据库操作2</span></div><div class="line">			&#125;</div><div class="line">		&#125;);</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>根据默认规则，如果在执行回调方法的过程中抛出了未检查异常(继承自<code>RuntimeException</code>的异常)，或者显式调用了<code>TransacationStatus.setRollbackOnly()</code> 方法，则回滚事务；如果事务执行完成或者抛出了 checked 类型的异常，则提交事务。</p>
+<p>不管是使用哪种方式，<strong>数据源</strong>、<strong>事务管理器</strong>都是必须的，一般通过XML的Bean配置</p>
+<h4 id="声明式事务-常用"><a href="#声明式事务-常用" class="headerlink" title="声明式事务(常用)"></a>声明式事务(常用)</h4><p>声明式事务可以分为2种：<strong>基于XML配置的事务管理</strong>或<strong>基于注解的事务管理</strong>，都是基于AOP实现</p>
+<h5 id="基于XML配置的事务管理"><a href="#基于XML配置的事务管理" class="headerlink" title="基于XML配置的事务管理"></a>基于XML配置的事务管理</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">   <span class="comment">&lt;!-- 数据源配置 --&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"dataSource"</span> <span class="attr">class</span>=<span class="string">"com.mchange.v2.c3p0.ComboPooledDataSource"</span>&gt;</span></div><div class="line">         <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClass"</span> <span class="attr">value</span>=<span class="string">"#&#123;jdbc['jdbc.driverClassName']&#125;"</span>/&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="comment">&lt;!-- 配置事务管理器 --&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionManager"</span> <span class="attr">class</span>=<span class="string">"org.springframework.jdbc.datasource.DataSourceTransactionManager"</span>&gt;</span></div><div class="line">       <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span> /&gt;</span></div><div class="line">   <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="comment">&lt;!-- 配置事务属性：传播行为、隔离级别、只读、超时时间回滚--&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">tx:advice</span> <span class="attr">id</span>=<span class="string">"txAdvice"</span> <span class="attr">transaction-manager</span>=<span class="string">"txManager"</span>&gt;</span></div><div class="line">   	<span class="tag">&lt;<span class="name">tx:attributes</span>&gt;</span></div><div class="line">   		<span class="tag">&lt;<span class="name">tx:method</span> <span class="attr">name</span>=<span class="string">"create*"</span> <span class="attr">propagation</span>=<span class="string">"REQUIRED"</span> <span class="attr">timeout</span>=<span class="string">"300"</span> <span class="attr">rollback-</span>	<span class="attr">for</span>=<span class="string">"java.lang.Exception"</span> /&gt;</span></div><div class="line"> 		<span class="tag">&lt;/<span class="name">tx:attributes</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">tx:advice</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="comment">&lt;!-- 配置事务切入点。并把事务切入点与事务属性关联起来 --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">aop:config</span>&gt;</span></div><div class="line"> 		<span class="tag">&lt;<span class="name">aop:pointcut</span> <span class="attr">id</span>=<span class="string">"txPointcut"</span> <span class="attr">expression</span>=<span class="string">"execution(* com.zsr.test.transaction.service.*ServiceImpl.*(..))"</span> /&gt;</span></div><div class="line"> 		<span class="tag">&lt;<span class="name">aop:advisor</span> <span class="attr">pointcut-ref</span>=<span class="string">"txPointcut"</span> <span class="attr">advice-ref</span>=<span class="string">"txAdvice"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">aop:config</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Service</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceImpl</span> <span class="keyword">implements</span> <span class="title">IService</span> </span>&#123;</div><div class="line"></div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">createTicket</span><span class="params">(String isbn)</span> </span>&#123;</div><div class="line">		<span class="comment">// do something</span></div><div class="line">	&#125;</div></pre></td></tr></table></figure>
+<h5 id="基于注解的事务管理"><a href="#基于注解的事务管理" class="headerlink" title="基于注解的事务管理"></a>基于注解的事务管理</h5><p>通过<code>@Transactional</code>对需要事务增强的Bean接口、实现类或方法进行标注，在容器中配置以启用基于注解的声明式事务。。注解所提供的事务属性信息与XML配置中的事务信息基本一致，只不过是另一种形式的元数据而已</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!-- 数据源配置 --&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"dataSource"</span> <span class="attr">class</span>=<span class="string">"com.mchange.v2.c3p0.ComboPooledDataSource"</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClass"</span> <span class="attr">value</span>=<span class="string">"#&#123;jdbc['jdbc.driverClassName']&#125;"</span>/&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line">    <span class="comment">&lt;!-- 配置事务管理器 --&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"transactionManager"</span> <span class="attr">class</span>=<span class="string">"org.springframework.jdbc.datasource.DataSourceTransactionManager"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"></div><div class="line">   <span class="comment">&lt;!-- 开启注解方式配置事物 --&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="name">tx:annotation-driven</span> <span class="attr">transaction-manager</span>=<span class="string">"transactionManager"</span>/&gt;</span></div></pre></td></tr></table></figure>
+<p><strong>注意：当<code>&lt;tx:annotation-driven/&gt;</code>标签在不指定<code>transaction-manager</code>属性的时候，会默认寻找id固定名为<code>transactionManager</code>的bean作为事务管理器，如果没有id为<code>transactionManager</code>的bean并且在使用<code>@Transactional</code>注解时也没有指定value（事务管理器），程序就会报错</strong></p>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Transactional</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceImpl</span> </span>&#123;</div><div class="line">	<span class="keyword">private</span> DaoA daoA;</div><div class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addElement</span><span class="params">(<span class="keyword">final</span> Element ele)</span> </span>&#123;</div><div class="line">		...</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>@Transactional</code>可以作用于接口、接口方法、类以及类方法上。当作用于类上时，该类的所有 <code>public</code> 方法将都具有该类型的事务属性，同时，也可以在方法级别使用该标注来覆盖类级别的定义</p>
+<h4 id="Spring-Transactional的注意事项"><a href="#Spring-Transactional的注意事项" class="headerlink" title="Spring @Transactional的注意事项"></a><code>Spring @Transactional</code>的注意事项</h4><ul>
+<li><code>@Transactional</code> 注解只被应用到 <code>public</code> 可见度的方法上。 如果你在 <code>protected</code>、<code>private</code> 或者 <code>package-visible</code> 的方法上使用 <code>@Transactional</code> 注解，它也不会报错，但是这个被注解的方法将不会展示已配置的事务设置。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">（1）对于基于接口动态代理的AOP事务增强来说，由于接口的方法是public的，这就要求实现类的实现方法必须是public的（不能是protected，private等），同时不能使用static的修饰符。所以，可以实施接口动态代理的方法只能是使用“public”或“public final”修饰符的方法，其它方法不可能被动态代理，相应的也就不能实施AOP增强，也即不能进行Spring事务增强。</div><div class="line"></div><div class="line">（2）基于CGLib字节码动态代理的方案是通过扩展被增强类，动态创建子类的方式进行AOP增强植入的。由于使用final,static,private修饰符的方法都不能被子类覆盖，相应的，这些方法将不能被实施的AOP增强。</div></pre></td></tr></table></figure>
+<ul>
+<li>Spring团队的建议在具体的类（或类的方法）上使用 <code>@Transactional</code> 注解，而不要使用在类所要实现的任何接口上。当然也可以在接口上使用 <code>@Transactional</code> 注解，但是这将只能当你设置了基于接口的代理时它才生效。因为注解是不能继承的，这就意味着如果你正在使用基于类的代理时(cglib)，那么事务的设置将不能被基于类的代理所识别，而且对象也将不会被事务代理所包装。因此，建议并且在具体的类火方法上使用 <code>@Transactional</code> 注解。</li>
+<li><code>@Transactional</code> 的事务开启，在同一个类中一个方法调用另一个有事务的方法，事务是不会起作用的。</li>
+<li><code>@Transactional</code> 注解标注的方法中不要出现网络调用、比较耗时的处理程序，因为，事务中数据库连接是不会释放的，如果每个事务的处理时间都非常长，那么宝贵的数据库连接资源将很快被耗尽。</li>
+<li><code>Spring</code>使用声明式事务处理，默认情况下，如果操作方法中发生了<code>unchecked</code>异常，所有的操作将<code>rollback</code>；如果发生的异常是<code>checked</code>异常，默认情况下数据库操作还是会提交的。</li>
+</ul>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.ibm.com/developerworks/cn/education/opensource/os-cn-spring-trans/index.html" target="_blank" rel="external">全面分析 Spring 的编程式事务管理及声明式事务管理</a></p>
+<p><a href="https://blog.csdn.net/lovesomnus/article/details/52619702" target="_blank" rel="external">Spring的声明式事务和编程式事务详解</a></p>
+<p><a href="http://www.yangbing.club/2017/03/22/spring-transaction-management/" target="_blank" rel="external">spring事务管理</a></p>
+<p><a href="http://tech.lede.com/2017/02/06/rd/server/SpringTransactional/" target="_blank" rel="external">Spring @Transactional原理及使用</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/08/jdk动态代理分析/" itemprop="url">
+                  jdk动态代理分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-04-08T14:36:47+08:00" content="2018-04-08">
+              2018-04-08
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">疑问：JDK的动态代理为什么不支持对类的代理，只支持接口的代理？</div></pre></td></tr></table></figure>
+<h3 id="jdk动态代理实例"><a href="#jdk动态代理实例" class="headerlink" title="jdk动态代理实例"></a><code>jdk</code>动态代理实例</h3><ul>
+<li>服务接口</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Hello</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String someThing)</span></span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>接口实现类</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloImpl</span> <span class="keyword">implements</span> <span class="title">Hello</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String someThing)</span> </span>&#123;</div><div class="line">    System.out.println(<span class="string">"Hello: "</span> + someThing);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>调用处理类</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.lang.reflect.InvocationHandler;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloInvocationHandle</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="keyword">private</span> Object target;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="title">HelloInvocationHandle</span><span class="params">(Object target)</span> </span>&#123;</div><div class="line">    <span class="keyword">this</span>.target = target;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="meta">@Override</span></div><div class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</div><div class="line">    System.out.println(<span class="string">"Before invocation"</span>);</div><div class="line">    Object ret = method.invoke(target, args);</div><div class="line">    System.out.println(<span class="string">"after invocation"</span>);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> ret;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>运行测试</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zsr.test.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.lang.reflect.Proxy;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloProxyTest</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line"></div><div class="line">    Hello hello = <span class="keyword">new</span> HelloImpl();</div><div class="line">    HelloInvocationHandle helloInvocationHandler = <span class="keyword">new</span> HelloInvocationHandle(hello);</div><div class="line"></div><div class="line">    <span class="comment">// 通过Proxy.newProxyInstance生成代理对象</span></div><div class="line">    Hello helloProxy = (Hello) Proxy.newProxyInstance(Hello.class.getClassLoader(), hello.getClass().getInterfaces(),</div><div class="line">            helloInvocationHandler);</div><div class="line"></div><div class="line">    <span class="comment">// 调用say方法</span></div><div class="line">    helloProxy.say(<span class="string">"test"</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Before invocation</div><div class="line">Hello: test</div><div class="line">after invocation</div></pre></td></tr></table></figure>
+<h3 id="Proxy-newProxyInstance分析"><a href="#Proxy-newProxyInstance分析" class="headerlink" title="Proxy.newProxyInstance分析"></a><code>Proxy.newProxyInstance</code>分析</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">newProxyInstance</span><span class="params">(ClassLoader loader,</span></span></div><div class="line">                                          Class&lt;?&gt;[] interfaces,</div><div class="line">                                          InvocationHandler h)</div><div class="line">        <span class="keyword">throws</span> IllegalArgumentException</div><div class="line">    &#123;</div><div class="line">        Objects.requireNonNull(h);</div><div class="line"></div><div class="line">        <span class="keyword">final</span> Class&lt;?&gt;[] intfs = interfaces.clone();</div><div class="line">        <span class="keyword">final</span> SecurityManager sm = System.getSecurityManager();</div><div class="line">        <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</div><div class="line">            checkProxyAccess(Reflection.getCallerClass(), loader, intfs);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">/*</span></div><div class="line">         * 动态生成Class的地方，重点是看这里面的方法</div><div class="line">         */</div><div class="line">        Class&lt;?&gt; cl = getProxyClass0(loader, intfs);</div><div class="line"></div><div class="line">        <span class="comment">/*</span></div><div class="line">         * 获取代理类的实例  </div><div class="line">         */</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">if</span> (sm != <span class="keyword">null</span>) &#123;</div><div class="line">                checkNewProxyPermission(Reflection.getCallerClass(), cl);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">final</span> Constructor&lt;?&gt; cons = cl.getConstructor(constructorParams);</div><div class="line">            <span class="keyword">final</span> InvocationHandler ih = h;</div><div class="line">            <span class="keyword">if</span> (!Modifier.isPublic(cl.getModifiers())) &#123;</div><div class="line">                AccessController.doPrivileged(<span class="keyword">new</span> PrivilegedAction&lt;Void&gt;() &#123;</div><div class="line">                    <span class="function"><span class="keyword">public</span> Void <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">                        cons.setAccessible(<span class="keyword">true</span>);</div><div class="line">                        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> cons.newInstance(<span class="keyword">new</span> Object[]&#123;h&#125;);</div><div class="line">        &#125; </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>生成代理类<code>Class</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"> <span class="keyword">private</span> <span class="keyword">static</span> Class&lt;?&gt; getProxyClass0(ClassLoader loader,</div><div class="line">                                           Class&lt;?&gt;... interfaces) &#123;</div><div class="line">        <span class="keyword">if</span> (interfaces.length &gt; <span class="number">65535</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"interface limit exceeded"</span>);</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        <span class="comment">// JDK对代理进行了缓存，如果已经存在相应的代理类，则直接返回，</span></div><div class="line">        <span class="comment">// 否则才会通过ProxyClassFactory来创建代理  </span></div><div class="line">        <span class="keyword">return</span> proxyClassCache.get(loader, interfaces);</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> WeakCache&lt;ClassLoader, Class&lt;?&gt;[], Class&lt;?&gt;&gt;</div><div class="line">        proxyClassCache = <span class="keyword">new</span> WeakCache&lt;&gt;(<span class="keyword">new</span> KeyFactory(), <span class="keyword">new</span> ProxyClassFactory());</div></pre></td></tr></table></figure>
+<ul>
+<li>代理类<code>Class</code>工厂</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">private static final class ProxyClassFactory</div><div class="line">        implements BiFunction&lt;ClassLoader, Class&lt;?&gt;[], Class&lt;?&gt;&gt;</div><div class="line">    &#123;</div><div class="line">        // 所有代理类名字的前缀</div><div class="line">        private static final String proxyClassNamePrefix = "$Proxy";</div><div class="line"></div><div class="line">        // next number to use for generation of unique proxy class names</div><div class="line">        private static final AtomicLong nextUniqueNumber = new AtomicLong();</div><div class="line"></div><div class="line">        @Override</div><div class="line">        public Class&lt;?&gt; apply(ClassLoader loader, Class&lt;?&gt;[] interfaces) &#123;</div><div class="line">            ......</div><div class="line"></div><div class="line">            /*</div><div class="line">             * Choose a name for the proxy class to generate.</div><div class="line">             */</div><div class="line">            long num = nextUniqueNumber.getAndIncrement();</div><div class="line">            // 默认情况下，代理类的完全限定名为：</div><div class="line">            // com.sun.proxy.$Proxy0，com.sun.proxy.$Proxy1依次递增</div><div class="line">            String proxyName = proxyPkg + proxyClassNamePrefix + num;</div><div class="line"></div><div class="line">            // ** 生成代理类字节码的地方 ** //</div><div class="line">            byte[] proxyClassFile = ProxyGenerator.generateProxyClass(</div><div class="line">                proxyName, interfaces);</div><div class="line">            try &#123;</div><div class="line">               // 根据二进制字节码返回相应的Class实例  </div><div class="line">                return defineClass0(loader, proxyName,</div><div class="line">                                    proxyClassFile, 0, proxyClassFile.length);</div><div class="line">            &#125; catch (ClassFormatError e) &#123;</div><div class="line">                throw new IllegalArgumentException(e.toString());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<h3 id="反编译代理类"><a href="#反编译代理类" class="headerlink" title="反编译代理类"></a>反编译代理类</h3><ul>
+<li>修改测试<code>HelloProxyTest</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloProxyTest</span> </span>&#123;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">    </div><div class="line">  <span class="comment">//设置为true,会在工程根目录生成$Proxy0.class代理类（com.sun.proxy.$Proxy0.class）</span></div><div class="line">    System.getProperties().put(</div><div class="line">        <span class="string">"sun.misc.ProxyGenerator.saveGeneratedFiles"</span>, <span class="string">"true"</span>);</div><div class="line"></div><div class="line">    Hello hello = <span class="keyword">new</span> HelloImpl();</div><div class="line">    HelloInvocationHandle helloInvocationHandler = <span class="keyword">new</span> HelloInvocationHandle(hello);</div><div class="line"></div><div class="line">    <span class="comment">// 通过Proxy.newProxyInstance生成代理对象</span></div><div class="line">    Hello helloProxy = (Hello) Proxy.newProxyInstance(Hello.class.getClassLoader(), hello.getClass().getInterfaces(),</div><div class="line">            helloInvocationHandler);</div><div class="line"></div><div class="line">    <span class="comment">// 调用say方法</span></div><div class="line">    helloProxy.say(<span class="string">"test"</span>);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>注意，当把<code>saveGeneratedFiles</code>属性设置为true时，生成的class文件及其所在的路径都需要提前创建，否则会抛出FileNotFoundException异常；即要在运行当前main方法的路径下创建com/sun/proxy目录，并创建一个$Proxy0.class文件</strong></p>
+<ul>
+<li>反编译文件<code>$Proxy0.class</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.sun.proxy;</div><div class="line"></div><div class="line"><span class="keyword">import</span> com.zsr.test.proxy.Hello;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.InvocationHandler;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Proxy;</div><div class="line"><span class="keyword">import</span> java.lang.reflect.UndeclaredThrowableException;</div><div class="line"></div><div class="line"><span class="comment">// ** 注意这里代理类实现了接口 ** //</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> $<span class="title">Proxy0</span> <span class="keyword">extends</span> <span class="title">Proxy</span></span></div><div class="line">  <span class="keyword">implements</span> <span class="title">Hello</span></div><div class="line">&#123;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m1;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m0;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m3;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Method m2;</div><div class="line"></div><div class="line">  <span class="keyword">public</span> $Proxy0(InvocationHandler paramInvocationHandler)</div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">super</span>(paramInvocationHandler);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">equals</span><span class="params">(Object paramObject)</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> ((Boolean)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m1, <span class="keyword">new</span> Object[] &#123; paramObject &#125;)).booleanValue();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">hashCode</span><span class="params">()</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> ((Integer)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m0, <span class="keyword">null</span>)).intValue();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">say</span><span class="params">(String paramString)</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m3, <span class="keyword">new</span> Object[] &#123; paramString &#125;);</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> String <span class="title">toString</span><span class="params">()</span></span></div><div class="line">    <span class="keyword">throws</span> </div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      <span class="keyword">return</span> (String)<span class="keyword">this</span>.h.invoke(<span class="keyword">this</span>, m2, <span class="keyword">null</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (RuntimeException localRuntimeException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> localRuntimeException;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (Throwable localThrowable)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UndeclaredThrowableException(localThrowable);</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">static</span></div><div class="line">  &#123;</div><div class="line">    <span class="keyword">try</span></div><div class="line">    &#123;</div><div class="line">      m1 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"equals"</span>, <span class="keyword">new</span> Class[] &#123; Class.forName(<span class="string">"java.lang.Object"</span>) &#125;);</div><div class="line">      m0 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"hashCode"</span>, <span class="keyword">new</span> Class[<span class="number">0</span>]);</div><div class="line">      m3 = Class.forName(<span class="string">"com.zsr.test.proxy.Hello"</span>).getMethod(<span class="string">"say"</span>, <span class="keyword">new</span> Class[] &#123; Class.forName(<span class="string">"java.lang.String"</span>) &#125;);</div><div class="line">      m2 = Class.forName(<span class="string">"java.lang.Object"</span>).getMethod(<span class="string">"toString"</span>, <span class="keyword">new</span> Class[<span class="number">0</span>]);</div><div class="line">      <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (NoSuchMethodException localNoSuchMethodException)</div><div class="line">    &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchMethodError(localNoSuchMethodException.getMessage());</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">catch</span> (ClassNotFoundException localClassNotFoundException)</div><div class="line">    &#123;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> NoClassDefFoundError(localClassNotFoundException.getMessage());</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>显而易见，动态生成的代理类有如下特性：</p>
+<ol>
+<li><strong>继承了Proxy类，实现了代理的接口，由于java不能多继承，这里已经继承了Proxy类了，不能再继承其他的类，所以JDK的动态代理不支持对实现类的代理，只支持接口的代理。</strong></li>
+<li>代理类实现代理接口的<code>say</code>方法中，只是简单的调用了<code>InvocationHandler</code>的<code>invoke</code>方法，我们可以在<code>invoke</code>方法中进行一些特殊操作，甚至不调用实现的方法，直接返回。</li>
+</ol>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://zhuanlan.zhihu.com/p/29188162" target="_blank" rel="external">JDK动态代理源码分析</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/27/消息feed系统研究/" itemprop="url">
+                  消息feed系统研究
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-03-27T18:53:50+08:00" content="2018-03-27">
+              2018-03-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/21/LRUMap/" itemprop="url">
+                  LRUMap
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-03-21T14:06:25+08:00" content="2018-03-21">
+              2018-03-21
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/14/无锁hashMap/" itemprop="url">
+                  无锁hashMap
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-03-14T11:33:22+08:00" content="2018-03-14">
+              2018-03-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/31/">31</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+
+          
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="David" />
+          <p class="site-author-name" itemprop="name">David</p>
+          <p class="site-description motion-element" itemprop="description">Develop Notes</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">155</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">37</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zsr" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/2214956781" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">David</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

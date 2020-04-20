@@ -4,6 +4,55 @@
   
     
     <entry>
+      <title><![CDATA[CMS收集过程和日志分析]]></title>
+      <url>http://zsr.github.io/2019/03/29/CMS%E6%94%B6%E9%9B%86%E8%BF%87%E7%A8%8B%E5%92%8C%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90/</url>
+      <content type="html"><![CDATA[<p>本文根据线上<code>jvm</code>环境(<code>Java 8</code>)以及<code>gc.log</code>主要梳理<code>ParNew GC</code>和<code>CMS GC</code>执行过程</p>
+<h3 id="JVM参数"><a href="#JVM参数" class="headerlink" title="JVM参数"></a><code>JVM</code>参数</h3><p>主要贴出相关一些参数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">-XX:MaxTenuringThreshold=8, </div><div class="line">-XX:ParallelGCThreads=8, </div><div class="line">-XX:+UseConcMarkSweepGC, </div><div class="line">-XX:+UseParNewGC, </div><div class="line">-XX:+DisableExplicitGC, </div><div class="line">-XX:+CMSParallelRemarkEnabled, </div><div class="line">-XX:+CMSClassUnloadingEnabled, </div><div class="line">-XX:CMSInitiatingOccupancyFraction=70, </div><div class="line">-XX:CMSFullGCsBeforeCompaction=5, </div><div class="line">-XX:+UseCMSCompactAtFullCollection, </div><div class="line">-XX:+CMSScavengeBeforeRemark,</div></pre></td></tr></table></figure>
+<h4 id="ParNew-and-CMS"><a href="#ParNew-and-CMS" class="headerlink" title="ParNew and CMS"></a><code>ParNew and CMS</code></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-XX:+UseParNewGC -XX:+UseConcMarkSweepGC</div></pre></td></tr></table></figure>
+<p><code>ParNew</code>收集器是<code>Serial</code>收集器的多线程版本，作用于年轻代，采用多线程进行收集，但一样要STW；</p>
+<p> 345<code>CMS</code>的全称是<code>Concurrent Mark and Sweep</code>，作用于老年代，目标是最短停顿时间，我司绝大部分<code>web</code>服务采用<code>ParNew + CMS</code>(还有一些<code>G1</code>)</p>
+<p><code>ParNew</code>：采用 <a href="https://plumbr.eu/handbook/garbage-collection-algorithms/removing-unused-objects/copy" target="_blank" rel="external">标记-复制</a> 算法；</p>
+<p><code>CMS</code>：采用<a href="https://plumbr.eu/handbook/garbage-collection-algorithms/removing-unused-objects/sweep" target="_blank" rel="external">标记-清除</a> 算法；</p>
+<h3 id="GC-日志"><a href="#GC-日志" class="headerlink" title="GC`日志"></a>GC`日志</h3><p>截取线上一段<code>gc.log</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">// </div><div class="line">2019-03-21T11:19:41.609+0800: 1086345.976: [GC (Allocation Failure) 2019-03-21T11:19:41.609+0800: 1086345.976: [ParNew: 873168K-&gt;36622K(943744K), 0.0312849 secs] 3074543K-&gt;2238776K(4089472K), 0.0316707 secs] [Times: user=0.14 sys=0.00, real=0.04 secs] </div><div class="line"></div><div class="line">2019-03-21T11:19:41.643+0800: 1086346.010: [GC (CMS Initial Mark) [1 CMS-initial-mark: 2202154K(3145728K)] 2238847K(4089472K), 0.0057407 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] </div><div class="line">2019-03-21T11:19:41.649+0800: 1086346.016: [CMS-concurrent-mark-start]</div><div class="line">2019-03-21T11:19:41.915+0800: 1086346.282: [CMS-concurrent-mark: 0.266/0.266 secs] [Times: user=0.64 sys=0.01, real=0.27 secs] </div><div class="line">2019-03-21T11:19:41.915+0800: 1086346.282: [CMS-concurrent-preclean-start]</div><div class="line">2019-03-21T11:19:41.968+0800: 1086346.335: [CMS-concurrent-preclean: 0.049/0.053 secs] [Times: user=0.06 sys=0.00, real=0.05 secs] </div><div class="line">2019-03-21T11:19:41.968+0800: 1086346.335: [CMS-concurrent-abortable-preclean-start]</div><div class="line">2019-03-21T11:19:47.067+0800: 1086351.434: [CMS-concurrent-abortable-preclean: 4.876/5.099 secs] [Times: user=6.58 sys=0.02, real=5.10 secs] </div><div class="line">2019-03-21T11:19:47.069+0800: 1086351.436: [GC (CMS Final Remark) [YG occupancy: 51879 K (943744 K)]2019-03-21T11:19:47.069+0800: 1086351.436: [GC (CMS Final Remark) 2019-03-21T11:19:47.069+0800: 1086351.436: [ParNew: 51879K-&gt;23393K(943744K), 0.0156467 secs] 2254034K-&gt;2226423K(4089472K), 0.0159200 secs] [Times: user=0.12 sys=0.00, real=0.02 secs] </div><div class="line">2019-03-21T11:19:47.085+0800: 1086351.452: [Rescan (parallel) , 0.0106023 secs]2019-03-21T11:19:47.096+0800: 1086351.462: [weak refs processing, 0.0000353 secs]2019-03-21T11:19:47.096+0800: 1086351.462: [class unloading, 0.0421021 secs]2019-03-21T11:19:47.138+0800: 1086351.505: [scrub symbol table, 0.0157111 secs]2019-03-21T11:19:47.153+0800: 1086351.520: [scrub string table, 0.0014866 secs][1 CMS-remark: 2203030K(3145728K)] 2226423K(4089472K), 0.0887818 secs] [Times: user=0.26 sys=0.01, real=0.09 secs] </div><div class="line">2019-03-21T11:19:47.158+0800: 1086351.525: [CMS-concurrent-sweep-start]</div><div class="line">2019-03-21T11:19:47.350+0800: 1086351.717: [CMS-concurrent-sweep: 0.192/0.192 secs] [Times: user=0.31 sys=0.00, real=0.20 secs] </div><div class="line">2019-03-21T11:19:47.351+0800: 1086351.717: [CMS-concurrent-reset-start]</div><div class="line">2019-03-21T11:19:47.356+0800: 1086351.723: [CMS-concurrent-reset: 0.005/0.005 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]</div></pre></td></tr></table></figure>
+<h3 id="ParNew-GC"><a href="#ParNew-GC" class="headerlink" title="ParNew GC"></a><code>ParNew GC</code></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">2019-03-21T11:19:41.609+0800: 1086345.976: [GC (Allocation Failure) 2019-03-21T11:19:41.609+0800: 1086345.976: [ParNew: 873168K-&gt;36622K(943744K), 0.0312849 secs] 3074543K-&gt;2238776K(4089472K), 0.0316707 secs] [Times: user=0.14 sys=0.00, real=0.04 secs]</div></pre></td></tr></table></figure>
+<ol>
+<li><code>GC</code>：区别<code>MinorGC</code>和<code>FullGC</code>的标识，这里代表的是<code>MinorGC</code>;</li>
+<li><code>Allocation Failure</code>：<code>MinorGC</code>的原因，在这里由于年轻代不满足申请的空间，因此触发了<code>MinorGC</code>(年轻代<code>GC</code>);</li>
+<li><code>ParNew</code>：收集器的类型，它预示了年轻代使用一个并行的<code>mark-copy</code>垃圾收集器；</li>
+<li><code>873168K-&gt;36622K</code>：收集前后年轻代的使用情况；</li>
+<li><code>943744K</code>： 整个年轻代的容量；</li>
+<li><code>3074543K-&gt;2238776K</code>：收集前后整个堆的使用情况；</li>
+<li><code>4089472K</code>：整个堆的容量；</li>
+<li><code>0.0316707 secs</code>：<code>ParNew</code>收集器标记和复制年轻代活着的对象所花费的时间（包括和老年代通信的开销、对象晋升到老年代时间、垃圾收集周期结束最后的清理对象等的花销）；</li>
+<li><code>[Times: user=0.14 sys=0.00, real=0.04 secs]</code>：<code>GC</code>事件在不同维度的耗时:<ul>
+<li><code>user</code>：<code>GC</code>线程在垃圾收集期间所使用的<code>CPU</code>总时间；</li>
+<li><code>sys</code>：系统调用或者等待系统事件花费的时间；</li>
+<li><code>real</code>：应用被暂停的时钟时间，由于<code>GC</code>线程是多线程的，导致了<code>real</code>小于<code>user+real</code>，如果是<code>GC</code>线程是单线程的话，<code>real</code>是接近于<code>user+real</code>时间。</li>
+</ul>
+</li>
+</ol>
+<h3 id="CMS-GC"><a href="#CMS-GC" class="headerlink" title="CMS GC"></a><code>CMS GC</code></h3><p><code>CMS GC</code>是基于<strong>标记-清除</strong>算法实现的，整个过程分几步：</p>
+<p><img src="https://tva1.sinaimg.cn/large/006tKfTcgy1g1n78irqnij31h207ugmn.jpg" alt=""></p>
+<ol>
+<li>初始标记(<code>initial-mark</code>)：从<code>GC Root</code>开始，仅扫描与根节点直接关联的对象并标记，这个过程需要<code>STW</code>，但是GC <code>Root</code>数量有限，因此时间较短</li>
+<li>并发标记(<code>concurrent-marking</code>)：这个阶段在初始标记的基础上继续向下进行遍历标记。这个阶段与用户线程并发执行，因此不停顿</li>
+<li>并发预清理(<code>concurrent-precleaning</code>)：该阶段并发执行，应用不停顿；在并发标记阶段执行期间，会出现一些刚刚晋升老年代的对象或新分配的对象，该阶段通过重新扫描减少下一阶段的工作；<code>precleaning</code>是为了减少下一阶段“重新标记”的工作量，因为<code>remark</code>阶段会<code>STW</code></li>
+<li>可终止的预清理(<code>Concurrent Abortable Preclean</code>)：可中止预清理阶段，运行在并发预清理和重新标记之间，直到获得所期望的<code>eden</code>空间占用率。不会暂停应用，继续预清理，直到<code>eden</code>区占用量达到<code>CMSScheduleRemarkEdenPenetration</code>(默认50%)或达到5秒钟</li>
+<li>重新标记(<code>remark</code>)：修正并发标记期间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，以保证执行清理之前对象引用关系是正确的。这一阶段需要<code>STW</code>，时间也比较短暂</li>
+<li>并发清理(<code>concurrent-sweeping</code>)：清理垃圾对象，这个过程与用户线程并发执行，不停顿</li>
+<li>并发重置(<code>reset</code>)：重置<code>CMS</code>收集器的数据结构，做好下一次执行<code>GC</code>任务的准备工作</li>
+</ol>
+<p>整个过程中需要<code>STW</code>的阶段仅有<strong>初始标记</strong>和<strong>重新标记</strong>阶段，所以可以说它的停顿时间比较短</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://plumbr.io/handbook/garbage-collection-algorithms-implementations/concurrent-mark-and-sweep" target="_blank" rel="external">https://plumbr.io/handbook/garbage-collection-algorithms-implementations/concurrent-mark-and-sweep</a></p>
+<p><a href="https://www.cnblogs.com/zhangxiaoguang/p/5792468.html" target="_blank" rel="external">(推荐)GC之详解CMS收集过程和日志分析</a></p>
+<p><a href="https://access.redhat.com/solutions/971613" target="_blank" rel="external">CMS: abort preclean due to time</a></p>
+<p><a href="http://www.blogjava.net/DLevin/archive/2015/08/01/426418.html" target="_blank" rel="external">Java CMS GC 361s引发的血案</a></p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[线上频繁Full GC分析]]></title>
       <url>http://zsr.github.io/2019/03/22/%E7%BA%BF%E4%B8%8A%E9%A2%91%E7%B9%81Full-GC%E5%88%86%E6%9E%90/</url>
       <content type="html"><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>同事的项目<code>voice-analyzer-web</code>线上环境，监控系统频繁报警<strong>发生JVMFullGC卡顿次数频繁</strong>(4台服务器都报警)，监控每10分钟统计一次，该时间段内<code>Full GC</code>超过10次就会报警。</p>
@@ -26,12 +75,12 @@
 <h4 id="使用VisualVM"><a href="#使用VisualVM" class="headerlink" title="使用VisualVM"></a>使用<code>VisualVM</code></h4><ul>
 <li>检查堆内存大对象：</li>
 </ul>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1g1f0vdxwdqj31jc0hwwka.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tKfTcgy1g1f0vdxwdqj31jc0hwwka.jpg" alt=""></p>
 <p>可见共有377094个<code>double[]</code>数组占有内存2G左右，<code>retained size</code>是该对象被GC之后所能回收到内存的总和；怀疑<code>double[]</code>对象泄漏，没有被回收</p>
 <ul>
 <li>查看该对象的<code>GC Root</code>：</li>
 </ul>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1g1f1ip6yf2j31gh0u0n4r.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tKfTcgy1g1f1ip6yf2j31gh0u0n4r.jpg" alt=""></p>
 <p>上图可以看出该<code>double[]</code>被<code>DataBuffer</code>直接引用，最后被缓存在<code>Guava LocalCache</code>中；从<code>GC Root</code>可以看出，有<code>ScheudleTask</code>(<code>DataPublisher</code>中创建)引用了该对象</p>
 <h3 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h3><ul>
 <li>进入<code>DataPublisher</code>类中，检查<code>ScheudleTask</code>创建过程：</li>
@@ -46,7 +95,7 @@
 <li>逆向检查<code>initialize()</code>调用</li>
 </ul>
 <p>调用关系如下：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1g1f27thkyjj30vm042jsn.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tKfTcgy1g1f27thkyjj30vm042jsn.jpg" alt=""></p>
 <p>由<code>LoadBalancerStats</code>类<code>createServerStats</code>方法触发</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">private</span> ServerStats <span class="title">createServerStats</span><span class="params">(Server server)</span> </span>&#123;</div><div class="line">        <span class="comment">// 创建ServerStats并初始化</span></div><div class="line">        ServerStats ss = <span class="keyword">new</span> ServerStats(<span class="keyword">this</span>);</div><div class="line">        ss.setBufferSize(<span class="number">1000</span>);</div><div class="line">        ss.setPublishInterval(<span class="number">1000</span>);                   </div><div class="line">        ss.initialize(server);</div><div class="line">        <span class="keyword">return</span> ss;        </div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">private</span> ServerStats <span class="title">getServerStats</span><span class="params">(Server server)</span> </span>&#123;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="comment">// 从localcache缓存中获取，如果没有</span></div><div class="line">            <span class="comment">// 则调用createServerStats创建ServerStats并缓存</span></div><div class="line">            <span class="keyword">return</span> serverStatsCache.get(server);</div><div class="line">        &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</div><div class="line">            ServerStats stats = createServerStats(server);</div><div class="line">            serverStatsCache.asMap().putIfAbsent(server, stats);</div><div class="line">            <span class="keyword">return</span> serverStatsCache.asMap().get(server);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line"> <span class="comment">// localcache在这里。。。，key是Server, value是ServerStats</span></div><div class="line"> <span class="keyword">private</span> <span class="keyword">final</span> LoadingCache&lt;Server, ServerStats&gt; serverStatsCache = </div><div class="line">        CacheBuilder.newBuilder()</div><div class="line">            .expireAfterAccess(SERVERSTATS_EXPIRE_MINUTES.get(), TimeUnit.MINUTES)</div><div class="line">            .removalListener(<span class="keyword">new</span> RemovalListener&lt;Server, ServerStats&gt;() &#123;</div><div class="line">                <span class="meta">@Override</span></div><div class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onRemoval</span><span class="params">(RemovalNotification&lt;Server, ServerStats&gt; notification)</span> </span>&#123;</div><div class="line">                    notification.getValue().close();</div><div class="line">                &#125;</div><div class="line">            &#125;)</div><div class="line">            .build(</div><div class="line">                <span class="keyword">new</span> CacheLoader&lt;Server, ServerStats&gt;() &#123;</div><div class="line">                    <span class="comment">// 缓存没有则创建ServerStats</span></div><div class="line">                    <span class="function"><span class="keyword">public</span> ServerStats <span class="title">load</span><span class="params">(Server server)</span> </span>&#123;</div><div class="line">                        <span class="keyword">return</span> createServerStats(server);</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div></pre></td></tr></table></figure>
 <p>可以看出<code>bufferSize=1000</code>，<code>Heap dump</code>中每个<code>double[]</code>元素也是1000；而且，定时任务时间间隔为1秒</p>
@@ -205,7 +254,7 @@
 <h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><p>程序只需发出一次系统调用<code>sendfile()</code>，数据只经过了2次<code>copy</code>就从磁盘传送出去了，没有<code>CPU copy</code></p>
 <p><code>nginx</code>，<code>java FileChannel.transferTo()</code>等在<code>Linux</code>系统中都引用了<code>sendfile</code>机制</p>
 <h3 id="FileChannel-transferTo-Java中的零拷贝"><a href="#FileChannel-transferTo-Java中的零拷贝" class="headerlink" title="FileChannel.transferTo(Java中的零拷贝)"></a><code>FileChannel.transferTo</code>(<code>Java中的零拷贝</code>)</h3><p><code>Java NIO</code>中<code>FileChannel.transferTo(long position, long count, WriteableByteChannel target)</code>方法将当前通道中的数据传送到目标通道中，在支持<code>Zero-Copy</code>的<code>linux</code>系统中，<code>transferTo()</code>的实现依赖于<code>sendfile()</code>调用</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNbRwgy1fymbp5iat5j30uo0imjsz.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fymbp5iat5j30uo0imjsz.jpg" alt=""></p>
 <h3 id="Netty零拷贝"><a href="#Netty零拷贝" class="headerlink" title="Netty零拷贝"></a><code>Netty</code>零拷贝</h3><ol>
 <li><code>Netty</code>的接收和发送<code>ByteBuffer</code>采用<code>DIRECT BUFFERS</code>，使用堆外内存进行<code>Socket</code>读写，不需要进行字节缓冲区的二次拷贝。如果使用传统的堆内存（<code>HEAP BUFFERS</code>）进行<code>Socket</code>读写，<code>JVM</code>会将堆内存<code>Buffer</code>拷贝一份到直接内存中，然后才写入<code>Socket</code>中。相比于堆外直接内存，消息在发送过程中多了一次缓冲区的内存拷贝。</li>
 <li><p><code>Netty</code>提供了<code>CompositeByteBuf</code>对象，可以聚合多个<code>ByteBuffer</code>对象，用户可以像操作一个<code>Buffer</code>那样方便的对组合<code>Buffer</code>进行操作，避免了传统通过内存拷贝的方式将几个小<code>Buffer</code>合并成一个大的<code>Buffer</code>。</p>
@@ -213,7 +262,7 @@
 <li><p><code>Netty</code>的文件传输采用了<code>java nio transferTo</code>方法，它可以直接将文件缓冲区的数据发送到目标<code>Channel</code>（传统的做法: 拷贝文件内容到临时 <code>buffer</code>, 然后再将 <code>buffer</code> 写入<code>Channel</code>），使用操作系统级别的零拷贝，避免了传统通过循环<code>write</code>方式导致的内存拷贝问题</p>
 </li>
 </ol>
-<h4 id="CompositeByteBuf"><a href="#CompositeByteBuf" class="headerlink" title="CompositeByteBuf"></a><code>CompositeByteBuf</code></h4><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fynh0n2p3wj30l40bwmxi.jpg" alt=""></p>
+<h4 id="CompositeByteBuf"><a href="#CompositeByteBuf" class="headerlink" title="CompositeByteBuf"></a><code>CompositeByteBuf</code></h4><p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fynh0n2p3wj30l40bwmxi.jpg" alt=""></p>
 <p><strong>注意： <code>CompositeByteBuf</code> 是由多个 <code>ByteBuf</code> 组合而成的, 不过在 <code>CompositeByteBuf</code> 内部, 这些 <code>ByteBuf</code> 都是单独存在的, <code>CompositeByteBuf</code> 保存了它们的引用，只是在逻辑上是一个整体</strong></p>
 <h4 id="java-ByteBuffer-vs-netty-ByteBuf"><a href="#java-ByteBuffer-vs-netty-ByteBuf" class="headerlink" title="java ByteBuffer vs netty ByteBuf"></a><code>java ByteBuffer</code> vs <code>netty ByteBuf</code></h4><p><code>java</code> 本身就有 <code>ByteBuffer</code>，为什么要额外设计一个 <code>ByteBuf</code>?</p>
 <ul>
@@ -229,7 +278,7 @@
     <entry>
       <title><![CDATA[Netty 核心组件]]></title>
       <url>http://zsr.github.io/2018/12/15/Netty-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6/</url>
-      <content type="html"><![CDATA[<h3 id="Netty工作架构图"><a href="#Netty工作架构图" class="headerlink" title="Netty工作架构图"></a><code>Netty</code>工作架构图</h3><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fycc2uem9sj313i0p643a.jpg" alt=""></p>
+      <content type="html"><![CDATA[<h3 id="Netty工作架构图"><a href="#Netty工作架构图" class="headerlink" title="Netty工作架构图"></a><code>Netty</code>工作架构图</h3><p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fycc2uem9sj313i0p643a.jpg" alt=""></p>
 <h3 id="模块组件"><a href="#模块组件" class="headerlink" title="模块组件"></a>模块组件</h3><h4 id="Bootstrap"><a href="#Bootstrap" class="headerlink" title="Bootstrap"></a><code>Bootstrap</code></h4><p><code>Bootstrap</code>是启动引导类，一个 <code>Netty</code> 应用通常由一个 <code>Bootstrap</code> 开始，主要作用是配置整个 <code>Netty</code> 程序，串联各个组件</p>
 <ul>
 <li><code>Bootstrap</code> 类是客户端程序的启动引导类</li>
@@ -246,8 +295,8 @@
 <li><code>ChannelOutboundHandler</code>：用于处理出站IO操作。</li>
 </ul>
 <h4 id="ChannelPipline"><a href="#ChannelPipline" class="headerlink" title="ChannelPipline"></a><code>ChannelPipline</code></h4><p><code>ChannelPipeline</code> 是聚合了 <code>ChannelHandler</code> 的管道，本质上是一个职责链路（用于处理<code>Channel</code>的入站事件和出站操作），在<code>Worker</code>线程中会对每一个<code>Channel</code>执行其所对应的<code>pipeline</code>链，完成整个生命周期。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fy8rq2caj7j30uw08k76d.jpg" alt=""></p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNbRwgy1fy8tkgaop2j31jo0mcac9.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy8rq2caj7j30uw08k76d.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy8tkgaop2j31jo0mcac9.jpg" alt=""></p>
 <p>蓝色表示 <code>ChannelInboundHandler</code> ，绿色表示 <code>ChannelOutboundHandler</code>，黄色则承担两个角色，而每个<code>Handler</code>又会使用 <code>ChannelHandlerContext</code> 封装起来，在 <code>ChannelPipeline</code> 中组装成双向链表。</p>
 <p><strong>ChannelPipeline handler 执行顺序</strong>：</p>
 <ul>
@@ -283,13 +332,13 @@
 <li>重建<code>Selector</code>，将出现bug的<code>Selector</code>上的<code>channel</code>重新注册到新的<code>Selector</code>上，并将原来的<code>Selector</code>关闭，使用新的<code>Selector</code>进行替换。</li>
 </ul>
 <h3 id="JDK源码分析："><a href="#JDK源码分析：" class="headerlink" title="JDK源码分析："></a><code>JDK</code>源码分析：</h3><p><code>JDK NIO</code>执行代码如下：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy7ija4ukgj311e0j2q7v.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy7ija4ukgj311e0j2q7v.jpg" alt=""></p>
 <p>执行<code>selector.select()</code>方法返回keys是0，所以本应该对key值进行遍历的事件处理根本没有执行，又回到最上面的<code>while(true)</code>循环，循环往复，不断的轮询，直到系统出现100%的CPU情况，最终导致程序崩溃。</p>
 <h3 id="Netty源码分析"><a href="#Netty源码分析" class="headerlink" title="Netty源码分析"></a><code>Netty</code>源码分析</h3><p>具体位置在实现类<code>NioEventLoop</code>中：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNbRwgy1fy7jey5qmkj315c0nigso.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy7jey5qmkj315c0nigso.jpg" alt=""></p>
 <p><code>netty</code>会在每次进行 <code>selector.select(timeoutMillis)</code> 之前记录一下开始时间<code>currentTimeNanos</code>，在<code>select</code>之后记录一下结束时间，判断<code>select</code>操作是否至少持续了<code>timeoutMillis</code>时间；<code>selectCnt</code>记录空轮询次数</p>
 <h4 id="重建selector"><a href="#重建selector" class="headerlink" title="重建selector"></a>重建<code>selector</code></h4><p>当发生<code>epoll bug</code>，则创建一个新的<code>Selector</code>，将出现bug的<code>Selector</code>上的<code>channel</code>重新注册到新的<code>Selector</code>上，关闭bug的<code>Selector</code>，使用新的<code>Selector</code>进行替换 :</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy7k5ilf63j31h40u0ahl.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy7k5ilf63j31h40u0ahl.jpg" alt=""></p>
 <p><code>Netty</code>的解决策略：</p>
 <ul>
 <li>根据该<code>bug</code>的特征，首先侦测该<code>bug</code>是否发生</li>
@@ -361,7 +410,7 @@
 <li>成熟、稳定，<code>Netty</code>修复了已经发现的所有<code>JDK NIO BUG</code>；</li>
 </ul>
 <h3 id="Netty架构设计"><a href="#Netty架构设计" class="headerlink" title="Netty架构设计"></a><code>Netty</code>架构设计</h3><p><code>Netty</code>采用了比较典型的三层网络架构进行设计，逻辑架构图如下所示：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy53lm41bjj30ts0fytgt.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy53lm41bjj30ts0fytgt.jpg" alt=""></p>
 <ul>
 <li>传输服务：支持 <code>BIO</code> 和 <code>NIO</code></li>
 <li>容器集成：支持 <code>OSGI</code>、<code>JBossMC</code>、<code>Spring</code>、<code>Guice</code>容器</li>
@@ -373,12 +422,12 @@
 <li><strong>协议</strong>：采用什么样的通信协议，<code>HTTP</code> 或者内部私有协议。协议的选择不同，性能模型也不同。相比于公有协议，内部私有协议的性能通常可以被设计的更优。</li>
 <li><strong>线程模型</strong>：数据报如何读取？读取之后的编解码在哪个线程进行，编解码后的消息如何派发，<code>Reactor</code> 线程模型的不同，对性能的影响也非常大。</li>
 </ol>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy53swbgjzj30rc0nwdk8.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy53swbgjzj30rc0nwdk8.jpg" alt=""></p>
 <h3 id="Netty高性能原因"><a href="#Netty高性能原因" class="headerlink" title="Netty高性能原因"></a><code>Netty</code>高性能原因</h3><h4 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a><strong>IO模型</strong></h4><p><code>Netty</code>的IO线程<code>NioEventLoop</code>由于聚合了多路复用器<code>Selector</code>，可以同时并发处理成百上千个客户端<code>Channel</code>，由于读写操作都是非阻塞的，这就可以充分提升IO线程的运行效率，避免由于频繁IO阻塞导致的线程挂起</p>
 <h4 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h4><p><strong>在后面的文章专门详解</strong></p>
 <h4 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h4><p><strong>在后面的文章专门详解</strong></p>
 <h4 id="Netty-线程模型"><a href="#Netty-线程模型" class="headerlink" title="Netty 线程模型"></a><strong>Netty 线程模型</strong></h4><p><code>Netty</code> 主要基于主从 <code>Reactor</code> 多线程模型（如下图）做了一定的修改，其中主从 <code>Reactor</code> 多线程模型有多个 <code>Reactor</code>：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy548sanm2j30rk0iwh0n.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy548sanm2j30rk0iwh0n.jpg" alt=""></p>
 <ul>
 <li><code>MainReactor</code>负责客户端的连接请求，并将请求转交给 <code>SubReactor</code></li>
 <li><code>SubReactor</code>负责相应通道的IO读写请求</li>
@@ -393,7 +442,7 @@
 <li><code>workerGroup</code> 线程池会被各个<code>SubReactor</code> 和 <code>Worker</code> 线程充分利用</li>
 </ul>
 <h3 id="Netty线程模型"><a href="#Netty线程模型" class="headerlink" title="Netty线程模型"></a>Netty线程模型</h3><p>下图来自组内大牛分享，盗来使用～～：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fy6dbsx3k1j31d60sok1f.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy6dbsx3k1j31d60sok1f.jpg" alt=""></p>
 <p><strong>注意：服务器端的 <code>ServerSocketChannel</code> 只绑定到了 <code>bossGroup</code> 中的一个线程, 因此在调用<code>Selector.select</code> 处理客户端的连接请求时, 实际上是在一个线程中的, 所以对只有一个服务(监听一个端口)的应用来说, <code>bossGroup</code> 设置多个线程是没有什么作用的, 反而还会造成资源浪费。</strong></p>
 <h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://www.baeldung.com/netty" target="_blank" rel="external">Introduction to Netty</a></p>
 <p><a href="https://sylvanassun.github.io/2017/11/30/2017-11-30-netty_introduction/" target="_blank" rel="external">Netty的那点事儿</a></p>
@@ -424,12 +473,12 @@
 <li>主从<code>Reactor</code>模式：主从<code>Reactor</code>多线程<code>Hanndler</code></li>
 </ul>
 <p><code>Reactor</code> 就是一个执行 <code>while (true) { selector.select(); …}</code> 循环的线程，会源源不断的产生新的事件，称作反应堆很贴切。</p>
-<h4 id="单线程Reactor模式"><a href="#单线程Reactor模式" class="headerlink" title="单线程Reactor模式"></a>单线程<code>Reactor</code>模式</h4><p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fy1i62jskoj31la0muk05.jpg" alt=""></p>
+<h4 id="单线程Reactor模式"><a href="#单线程Reactor模式" class="headerlink" title="单线程Reactor模式"></a>单线程<code>Reactor</code>模式</h4><p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy1i62jskoj31la0muk05.jpg" alt=""></p>
 <p>单线程<code>Reactor</code>模式 : 建立连接，读取/写回数据和业务操作都在同一个<code>Reactor</code>线程中执行，虽然<code>Reactor</code>的读取写回不会造成阻塞，但是业务操作就很可能造成阻塞；并且单线程不能充分利用<code>CPU</code>多核优势，因此处理能力是有限的，对于小量连接情况下问题不大，对于大量链接情况下，单个<code>NIO</code>线程因处理能力有限会导致连接大量超时。</p>
 <h4 id="多线程Reactor模式"><a href="#多线程Reactor模式" class="headerlink" title="多线程Reactor模式"></a>多线程<code>Reactor</code>模式</h4><p>将非IO的业务逻辑操作从<code>Reactor</code>线程上卸载，以此来加速<code>Reactor</code>线程对IO请求的响应。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fy2txzpfcwj30rs0jjqdo.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy2txzpfcwj30rs0jjqdo.jpg" alt=""></p>
 <p>多线程<code>Reactor</code>模式：多线程模式下把业务操作（<code>decode</code>，<code>compute</code>，<code>encode</code>）等放到线程池中处理，保证<code>Reactor</code>线程不会阻塞，而<code>Reactor</code>仍为单个线程仍然要处理连接和读取/写回操作，其承担连接负载量上来时仍然承受很大压力（例如并发百万客户端连接，或者服务端需要对客户端握手进行安全认证，但是认证本身非常损耗性能）</p>
-<h3 id="主从Reactor模式"><a href="#主从Reactor模式" class="headerlink" title="主从Reactor模式"></a>主从<code>Reactor</code>模式</h3><p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fy3sy13x4cj312u0r847b.jpg" alt=""></p>
+<h3 id="主从Reactor模式"><a href="#主从Reactor模式" class="headerlink" title="主从Reactor模式"></a>主从<code>Reactor</code>模式</h3><p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fy3sy13x4cj312u0r847b.jpg" alt=""></p>
 <p>主从<code>Reactor</code>模式：相比多线程<code>Reactor</code>模式，主从<code>Reactor</code>模式下把IO读取/写回两个操作放在 <strong>从Reactor线程池</strong> 中执行， <strong>主Reactor线程</strong>也就是<code>Acceptor</code>只负责建立连接，建立之后将其注册到 <strong>从Reactor线程</strong> 中，因此大大提高了负载能力。同时为了避免并发问题还要保证一个连接只能注册一个<code>Reactor</code>线程上</p>
 <ul>
 <li><code>MainReactor</code>负责客户端的连接请求，并将请求转交给 <code>SubReactor</code></li>
@@ -488,7 +537,7 @@
 <p>在获取到事件之后将操作委托给了<code>epollCtl</code>,这又是个native方法：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">Java_sun_nio_ch_EPollArrayWrapper_epollCtl(JNIEnv *env, jobject <span class="keyword">this</span>, jint epfd,</div><div class="line">                                           jint opcode, jint fd, jint events)</div><div class="line">&#123;</div><div class="line">    <span class="keyword">struct</span> epoll_event event;</div><div class="line">    <span class="keyword">int</span> res;</div><div class="line"></div><div class="line">    event.events = events;</div><div class="line">    event.data.fd = fd;</div><div class="line"></div><div class="line">    <span class="comment">// 发起epoll_ctl调用来进行IO事件的管理</span></div><div class="line">    RESTARTABLE(epoll_ctl(epfd, (<span class="keyword">int</span>)opcode, (<span class="keyword">int</span>)fd, &amp;event), res);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (res &lt; <span class="number">0</span> &amp;&amp; errno != EBADF &amp;&amp; errno != ENOENT &amp;&amp; errno != EPERM) &#123;</div><div class="line">        JNU_ThrowIOExceptionWithLastError(env, <span class="string">"epoll_ctl failed"</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p><strong>注意：jdk nio没有指定<code>ET(边缘触发)</code>还是<code>LT(水平触发)</code>, 所以默认会用<code>LT</code>, 而<code>Netty epoll transport</code>使用<code>ET</code>触发</strong></p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNbRwgy1fxv38f07maj310g0jmdm2.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fxv38f07maj310g0jmdm2.jpg" alt=""></p>
 <p>通过<code>channel</code>就能不断的获取客户端<code>socket</code>数据，实现后端业务处理</p>
 <h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://juejin.im/entry/5b51546df265da0f70070b93" target="_blank" rel="external">Java NIO分析(8): 高并发核心Selector详解</a></p>
 <p><a href="https://www.jianshu.com/p/7b507069debb" target="_blank" rel="external">java NIO 运行原理介绍</a></p>
@@ -505,7 +554,7 @@
 <h3 id="用户空间与内核空间"><a href="#用户空间与内核空间" class="headerlink" title="用户空间与内核空间"></a>用户空间与内核空间</h3><p>对于一次IO访问（以<code>read</code>举例），数据会先被拷贝到操作系统内核的缓冲区中(通过DMA，不需要CPU)，然后才会从操作系统内核的缓冲区拷贝到应用程序的地址空间(需要CPU)。所以说，当一个read操作发生时，它会经历两个阶段：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">1. 等待数据准备 (Waiting for the data to be ready)；对于一个socket接口上的操作，这一步骤关系到数据从网络到达，并将其复制到内核的缓冲区</div><div class="line">2. 将数据从内核拷贝到进程中 (Copying the data from the kernel to the process)</div></pre></td></tr></table></figure>
 <h3 id="Blocking-IO"><a href="#Blocking-IO" class="headerlink" title="Blocking IO"></a>Blocking IO</h3><p>传统的阻塞 I/O 模型工作方式：当线程使用 <code>read</code> 或者 <code>write</code> 对某一个<strong>文件描述符（File Descriptor 以下简称 FD)</strong>进行读写时，如果当前 FD 不可读或不可写，当前线程会被CPU挂起阻塞，一直等待数据准备完毕。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fxp3a06e2jj30rs0ku0wq.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fxp3a06e2jj30rs0ku0wq.jpg" alt=""></p>
 <p>例如：tomcat服务器BIO模式，利用多线程 + 线程池 处理；即每一个socket连接创建一个独立的线程处理</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line"> ExecutorService executor = Excutors.newFixedThreadPollExecutor(<span class="number">100</span>);<span class="comment">//线程池</span></div><div class="line"> ServerSocket serverSocket = <span class="keyword">new</span> ServerSocket();</div><div class="line"> serverSocket.bind(<span class="number">8080</span>);</div><div class="line"> <span class="keyword">while</span>(<span class="keyword">true</span>)&#123; <span class="comment">//死循环等待新连接到来</span></div><div class="line"> 	Socket socket = serverSocket.accept();</div><div class="line"> 	executor.submit(<span class="keyword">new</span> ConnectIOHandler(socket));<span class="comment">//为新的连接创建新的线程</span></div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConnectIOHandler</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</div><div class="line">    <span class="keyword">private</span> Socket socket;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConnectIOnHandler</span><span class="params">(Socket socket)</span></span>&#123;</div><div class="line">       <span class="keyword">this</span>.socket = socket;</div><div class="line">    &#125;</div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>&#123;</div><div class="line">      <span class="keyword">while</span>(!socket.isClosed())&#123; <span class="comment">// 死循环处理读写事件</span></div><div class="line">          String someThing = socket.read()....<span class="comment">//读取数据</span></div><div class="line">          <span class="keyword">if</span>(someThing!=<span class="keyword">null</span>)&#123;</div><div class="line">             ......<span class="comment">//处理数据</span></div><div class="line">             socket.write()....<span class="comment">//写数据</span></div><div class="line">          &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h4><ul>
@@ -513,7 +562,7 @@
 <li>线程的切换成本是很高的。操作系统发生线程切换的时候，需要保留线程的上下文，然后执行系统调用。如果线程数过高，可能执行线程切换的时间甚至会大于线程执行的时间</li>
 </ul>
 <h3 id="IO多路复用-IO-mutiplexing"><a href="#IO多路复用-IO-mutiplexing" class="headerlink" title="IO多路复用(IO mutiplexing)"></a>IO多路复用(IO mutiplexing)</h3><p>IO多路复用就通过一种机制，单个线程通过监视多个I/O流的状态来同时管理多个I/O流，一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fxpxgg7qbfj30rs0kun32.jpg" alt=""></p>
+<p><img src="https://tva1.sinaimg.cn/large/006tNbRwgy1fxpxgg7qbfj30rs0kun32.jpg" alt=""></p>
 <p>当应用进程通过<code>select</code>读取文件(<code>socket</code>)，应用进程会被<code>block</code>，于此同时内核会“监视”所有通过<code>select</code>请求的文件读取(<code>socket</code>)，任何一个文件(<code>socket</code>)的数据被准备好，<code>select</code>就会返回，应用进程再调用<code>read</code>操作，把数据从内核中拷贝到应用进程。</p>
 <h4 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h4><ul>
 <li>IO复用技术的优势在于，只需要使用一个线程就可以管理多个socket，系统不需要建立新的进程或者线程，也不必维护这些线程和进程，很大程度上减少了资源占用；适合于连接数多的场景(nginx，rpc，redis等)。</li>
